@@ -360,4 +360,1227 @@ body {
         width: 40px;
         height: 40px;
     }
+
+
+
+
+
+        /* Добавь эти стили в конец существующего style.css */
+    
+    /* === СТИЛИ ДЛЯ МОДУЛЯ ТРЕНИРОВОК === */
+    
+    /* Быстрый старт */
+    .quick-start-section {
+        margin-bottom: 24px;
+        animation: fadeIn 0.8s ease-out 0.2s both;
+    }
+    
+    .quick-start-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
+    
+    .quick-start-card {
+        background: var(--surface);
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius);
+        padding: 20px 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        transition: var(--transition);
+        text-align: center;
+        text-decoration: none;
+        color: var(--text-primary);
+    }
+    
+    .quick-start-card:hover {
+        transform: translateY(-3px);
+        border-color: var(--primary-light);
+        box-shadow: var(--shadow);
+    }
+    
+    .quick-start-emoji {
+        font-size: 2rem;
+    }
+    
+    .quick-start-title {
+        font-size: 1rem;
+        font-weight: 700;
+    }
+    
+    .quick-start-desc {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+    
+    /* Заголовок секции с кнопкой */
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+    
+    .create-btn {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        border: none;
+        border-radius: var(--radius-sm);
+        padding: 10px 16px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: var(--transition);
+    }
+    
+    .create-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(6, 180, 143, 0.3);
+    }
+    
+    .create-icon {
+        font-size: 1.1rem;
+        font-weight: 800;
+    }
+    
+    .view-all-btn {
+        background: transparent;
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        padding: 8px 14px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    
+    .view-all-btn:hover {
+        border-color: var(--primary-light);
+        color: var(--primary);
+    }
+    
+    /* Список тренировок */
+    .workouts-list {
+        background: var(--surface);
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius);
+        padding: 16px;
+        margin-bottom: 24px;
+        animation: fadeIn 0.8s ease-out 0.4s both;
+    }
+    
+    .empty-workouts {
+        text-align: center;
+        padding: 40px 16px;
+    }
+    
+    .empty-workouts .empty-icon {
+        font-size: 3rem;
+        margin-bottom: 16px;
+        opacity: 0.3;
+    }
+    
+    .empty-workouts .empty-text {
+        font-size: 1rem;
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        border: none;
+        border-radius: var(--radius-sm);
+        padding: 14px 28px;
+        font-size: 1rem;
+        font-weight: 700;
+        color: white;
+        cursor: pointer;
+        transition: var(--transition);
+        display: inline-block;
+        text-decoration: none;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(6, 180, 143, 0.3);
+    }
+    
+    .btn-secondary {
+        background: transparent;
+        border: 2px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 14px 28px;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    
+    .btn-secondary:hover {
+        border-color: var(--primary-light);
+        color: var(--primary);
+    }
+    
+    /* Карточка тренировки */
+    .workout-card {
+        background: var(--surface);
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius);
+        padding: 20px;
+        margin-bottom: 12px;
+        transition: var(--transition);
+        cursor: pointer;
+        position: relative;
+    }
+    
+    .workout-card:hover {
+        transform: translateY(-2px);
+        border-color: var(--primary-light);
+        box-shadow: var(--shadow);
+    }
+    
+    .workout-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 12px;
+    }
+    
+    .workout-card-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    
+    .workout-card-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-bottom: 16px;
+    }
+    
+    .workout-card-desc {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+        line-height: 1.5;
+        margin-bottom: 16px;
+    }
+    
+    .workout-card-exercises {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+    
+    .exercise-tag {
+        background: rgba(6, 180, 143, 0.1);
+        color: var(--primary-dark);
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .workout-card-actions {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .btn-small {
+        padding: 8px 14px;
+        font-size: 0.85rem;
+        border-radius: var(--radius-sm);
+        border: none;
+        cursor: pointer;
+        transition: var(--transition;
+    }
+    
+    .btn-small.start {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: white;
+    }
+    
+    .btn-small.edit {
+        background: transparent;
+        border: 2px solid var(--border);
+        color: var(--text-secondary);
+    }
+    
+    .btn-small.edit:hover {
+        border-color: var(--primary-light);
+        color: var(--primary);
+    }
+    
+    /* Фильтр категорий */
+    .category-filter {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding: 12px 0;
+        margin-bottom: 20px;
+        scrollbar-width: none;
+    }
+    
+    .category-filter::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .category-btn {
+        background: var(--surface);
+        border: 2px solid var(--border-light);
+        border-radius: 50px;
+        padding: 10px 18px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        cursor: pointer;
+        white-space: nowrap;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .category-btn:hover {
+        border-color: var(--primary-light);
+        color: var(--primary);
+    }
+    
+    .category-btn.active {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: white;
+        border-color: var(--primary);
+    }
+    
+    /* Список упражнений */
+    .exercises-section {
+        margin-bottom: 24px;
+        animation: fadeIn 0.8s ease-out 0.6s both;
+    }
+    
+    .exercises-list {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .exercise-card {
+        background: var(--surface);
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius);
+        padding: 16px;
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .exercise-card:hover {
+        transform: translateY(-2px);
+        border-color: var(--primary-light);
+        box-shadow: var(--shadow);
+    }
+    
+    .exercise-card-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .exercise-emoji {
+        font-size: 1.5rem;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+    }
+    
+    .exercise-card-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    
+    .exercise-card-desc {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    .exercise-card-category {
+        font-size: 0.75rem;
+        color: var(--text-light);
+        font-weight: 600;
+        margin-top: auto;
+    }
+    
+    /* Статистика тренировок */
+    .workout-stats-section {
+        margin-bottom: 24px;
+        animation: fadeIn 0.8s ease-out 0.8s both;
+    }
+    
+    .stats-grid-workouts {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
+    
+    .stat-card-workout {
+        background: var(--surface);
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius);
+        padding: 16px 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        transition: var(--transition);
+    }
+    
+    .stat-card-workout:hover {
+        transform: translateY(-2px);
+        border-color: var(--primary-light);
+        box-shadow: var(--shadow);
+    }
+    
+    .stat-card-workout.skin-card {
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 154, 118, 0.1));
+        border-color: rgba(255, 154, 118, 0.2);
+    }
+    
+    .stat-icon-workout {
+        font-size: 1.5rem;
+        margin-bottom: 4px;
+    }
+    
+    .stat-value-workout {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        text-align: center;
+    }
+    
+    .stat-label-workout {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        text-align: center;
+        font-weight: 500;
+    }
+    
+    /* История тренировок */
+    .workout-history-section {
+        margin-bottom: 80px;
+        animation: fadeIn 0.8s ease-out 1s both;
+    }
+    
+    .history-list-workouts {
+        background: var(--surface);
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius);
+        padding: 16px;
+        max-height: 250px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: var(--primary) transparent;
+    }
+    
+    .history-list-workouts::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .history-list-workouts::-webkit-scrollbar-track {
+        background: transparent;
+        border-radius: 3px;
+    }
+    
+    .history-list-workouts::-webkit-scrollbar-thumb {
+        background: var(--primary-light);
+        border-radius: 3px;
+    }
+    
+    .workout-history-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        border-bottom: 1px solid var(--border-light);
+        animation: slideIn 0.5s ease-out;
+        transition: var(--transition);
+    }
+    
+    .workout-history-item:hover {
+        background: rgba(6, 180, 143, 0.03);
+    }
+    
+    .workout-history-item:last-child {
+        border-bottom: none;
+    }
+    
+    .workout-history-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .workout-history-name {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    
+    .workout-history-meta {
+        display: flex;
+        gap: 12px;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+    
+    .workout-history-skins {
+        font-size: 0.9rem;
+        color: #FF9A76;
+        font-weight: 700;
+        background: rgba(255, 154, 118, 0.1);
+        padding: 3px 8px;
+        border-radius: 10px;
+    }
+    
+    /* === РЕЖИМ ВЫПОЛНЕНИЯ ТРЕНИРОВКИ === */
+    
+    .workout-execution-container {
+        animation: fadeIn 0.5s ease-out;
+    }
+    
+    .workout-execution-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 16px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border-light);
+    }
+    
+    .workout-execution-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    
+    .workout-execution-progress {
+        padding: 16px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border-light);
+    }
+    
+    .progress-bar {
+        height: 8px;
+        background: var(--border-light);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 8px;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+        border-radius: 4px;
+        transition: width 0.5s ease;
+    }
+    
+    .progress-text {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+    
+    .current-exercise-container {
+        padding: 24px 16px;
+        background: var(--surface);
+        margin: 16px;
+        border-radius: var(--radius);
+        border: 2px solid var(--border-light);
+        box-shadow: var(--shadow-light);
+    }
+    
+    .current-exercise-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    
+    .current-exercise-emoji {
+        font-size: 2.5rem;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 15px;
+        background: rgba(6, 180, 143, 0.1);
+    }
+    
+    .current-exercise-info {
+        flex: 1;
+    }
+    
+    .current-exercise-name {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+    }
+    
+    .current-exercise-sets {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+    }
+    
+    .current-set-info {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+    
+    .current-set-number {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--primary);
+        margin-bottom: 8px;
+    }
+    
+    .current-set-label {
+        font-size: 1rem;
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+    
+    .workout-controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+    
+    .control-group {
+        background: rgba(6, 180, 143, 0.05);
+        border-radius: var(--radius);
+        padding: 16px;
+        text-align: center;
+    }
+    
+    .control-label {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+    
+    .control-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin-bottom: 12px;
+    }
+    
+    .control-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    .control-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--surface);
+        border: 2px solid var(--border-light);
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition);
+    }
+    
+    .control-btn:hover {
+        background: var(--primary-light);
+        border-color: var(--primary);
+        color: white;
+    }
+    
+    .workout-action-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+    
+    .action-btn-large {
+        padding: 18px;
+        border-radius: var(--radius);
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        border: none;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    .action-btn-large.complete {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: white;
+    }
+    
+    .action-btn-large.skip {
+        background: transparent;
+        border: 2px solid var(--border);
+        color: var(--text-secondary);
+    }
+    
+    .action-btn-large.skip:hover {
+        border-color: var(--primary-light);
+        color: var(--primary);
+    }
+    
+    .rest-timer-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(10px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        animation: fadeIn 0.3s ease-out;
+    }
+    
+    .rest-timer-display {
+        text-align: center;
+        color: white;
+        margin-bottom: 40px;
+    }
+    
+    .rest-timer-value {
+        font-size: 6rem;
+        font-weight: 800;
+        margin-bottom: 16px;
+        font-family: 'SF Pro Display', -apple-system, sans-serif;
+    }
+    
+    .rest-timer-label {
+        font-size: 1.2rem;
+        opacity: 0.8;
+    }
+    
+    .rest-timer-skip {
+        background: transparent;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 14px 28px;
+        border-radius: var(--radius);
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    
+    .rest-timer-skip:hover {
+        background: white;
+        color: var(--text-primary);
+    }
+    
+    .workout-completion {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(6, 180, 143, 0.95);
+        backdrop-filter: blur(20px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        animation: fadeIn 0.5s ease-out;
+        color: white;
+        text-align: center;
+    }
+    
+    .workout-completion-icon {
+        font-size: 5rem;
+        margin-bottom: 20px;
+        animation: pulse 2s infinite;
+    }
+    
+    .workout-completion-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 16px;
+    }
+    
+    .workout-completion-stats {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 30px;
+        line-height: 1.6;
+    }
+    
+    .workout-completion-skins {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #FFD700;
+        margin-bottom: 40px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .workout-completion-actions {
+        display: flex;
+        gap: 16px;
+    }
+    
+    /* === МОДАЛЬНЫЕ ОКНА === */
+    
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        animation: fadeIn 0.3s ease-out;
+    }
+    
+    .modal {
+        background: var(--surface);
+        border-radius: var(--radius-lg);
+        width: 90%;
+        max-width: 500px;
+        max-height: 80vh;
+        overflow-y: auto;
+        animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    .modal.modal-large {
+        max-width: 600px;
+        max-height: 85vh;
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 24px;
+        border-bottom: 1px solid var(--border-light);
+    }
+    
+    .modal-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    
+    .modal-close {
+        background: transparent;
+        border: none;
+        font-size: 1.8rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: var(--transition);
+    }
+    
+    .modal-close:hover {
+        background: var(--border-light);
+        color: var(--text-primary);
+    }
+    
+    .modal-content {
+        padding: 24px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+    }
+    
+    .modal-input {
+        width: 100%;
+        background: var(--surface);
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        padding: 14px 16px;
+        font-size: 1rem;
+        color: var(--text-primary);
+        outline: none;
+        font-family: inherit;
+        transition: var(--transition);
+    }
+    
+    .modal-input:focus {
+        border-color: var(--primary-light);
+        box-shadow: 0 0 0 3px rgba(6, 180, 143, 0.1);
+    }
+    
+    .modal-textarea {
+        width: 100%;
+        background: var(--surface);
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        padding: 14px 16px;
+        font-size: 1rem;
+        color: var(--text-primary);
+        outline: none;
+        font-family: inherit;
+        resize: vertical;
+        min-height: 80px;
+        transition: var(--transition);
+    }
+    
+    .modal-textarea:focus {
+        border-color: var(--primary-light);
+        box-shadow: 0 0 0 3px rgba(6, 180, 143, 0.1);
+    }
+    
+    /* Выбор упражнений */
+    .exercises-selection {
+        margin-bottom: 24px;
+    }
+    
+    .exercises-selection h4 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+    }
+    
+    .selected-exercises {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 16px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    
+    .selected-exercise-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px;
+        background: rgba(6, 180, 143, 0.05);
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-light);
+    }
+    
+    .selected-exercise-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .selected-exercise-emoji {
+        font-size: 1.2rem;
+    }
+    
+    .selected-exercise-name {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    
+    .selected-exercise-meta {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+    
+    .selected-exercise-remove {
+        background: transparent;
+        border: none;
+        color: var(--remove);
+        font-size: 1.2rem;
+        cursor: pointer;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: var(--transition);
+    }
+    
+    .selected-exercise-remove:hover {
+        background: rgba(255, 107, 107, 0.1);
+    }
+    
+    .btn-outline {
+        background: transparent;
+        border: 2px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 12px 20px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        justify-content: center;
+        transition: var(--transition);
+    }
+    
+    .btn-outline:hover {
+        border-color: var(--primary-light);
+        color: var(--primary);
+    }
+    
+    /* Сетка упражнений в модальном окне */
+    .exercise-search {
+        margin-bottom: 20px;
+    }
+    
+    .search-input {
+        width: 100%;
+        background: var(--surface);
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        padding: 14px 16px;
+        font-size: 1rem;
+        color: var(--text-primary);
+        outline: none;
+        font-family: inherit;
+        transition: var(--transition);
+    }
+    
+    .search-input:focus {
+        border-color: var(--primary-light);
+        box-shadow: 0 0 0 3px rgba(6, 180, 143, 0.1);
+    }
+    
+    .exercises-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        max-height: 300px;
+        overflow-y: auto;
+        padding-right: 8px;
+        margin-bottom: 24px;
+    }
+    
+    .exercise-grid-item {
+        background: var(--surface);
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius);
+        padding: 16px;
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .exercise-grid-item:hover {
+        transform: translateY(-2px);
+        border-color: var(--primary-light);
+        box-shadow: var(--shadow);
+    }
+    
+    .exercise-grid-item.selected {
+        background: rgba(6, 180, 143, 0.1);
+        border-color: var(--primary);
+    }
+    
+    .exercise-grid-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .exercise-grid-emoji {
+        font-size: 1.5rem;
+    }
+    
+    .exercise-grid-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    
+    .exercise-grid-desc {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    /* Числовые инпуты */
+    .number-input {
+        display: flex;
+        align-items: center;
+        background: var(--surface);
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+    }
+    
+    .number-input-field {
+        width: 60px;
+        background: transparent;
+        border: none;
+        padding: 14px 0;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        text-align: center;
+        outline: none;
+        font-family: inherit;
+    }
+    
+    .number-btn {
+        width: 50px;
+        height: 50px;
+        background: transparent;
+        border: none;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .number-btn:hover {
+        background: rgba(6, 180, 143, 0.1);
+        color: var(--primary);
+    }
+    
+    .modal-actions {
+        display: flex;
+        gap: 12px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-light);
+    }
+    
+    /* Анимации */
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Адаптивность */
+    @media (max-width: 500px) {
+        .quick-start-grid {
+            gap: 10px;
+        }
+        
+        .quick-start-card {
+            padding: 16px 8px;
+        }
+        
+        .quick-start-emoji {
+            font-size: 1.8rem;
+        }
+        
+        .quick-start-title {
+            font-size: 0.9rem;
+        }
+        
+        .exercises-list {
+            grid-template-columns: 1fr;
+        }
+        
+        .stats-grid-workouts {
+            gap: 10px;
+        }
+        
+        .workout-history-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .workout-history-meta {
+            flex-wrap: wrap;
+        }
+        
+        .workout-controls {
+            grid-template-columns: 1fr;
+        }
+        
+        .modal {
+            width: 95%;
+            max-height: 85vh;
+        }
+        
+        .exercises-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+
+    
 }
+
