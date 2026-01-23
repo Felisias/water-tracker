@@ -1,4 +1,4 @@
-const CACHE_NAME = 'healthflow-v1';
+const CACHE_NAME = 'healthflow-v2'; // Увеличиваем версию
 const urlsToCache = [
     '/healthflow/',
     '/healthflow/index.html',
@@ -8,6 +8,9 @@ const urlsToCache = [
     '/healthflow/style.css',
     '/healthflow/app.js',
     '/healthflow/water.js',
+    '/healthflow/workouts.js',
+    '/healthflow/exercises.js',
+    '/healthflow/workout-execution.js',
     '/healthflow/db.js',
     '/healthflow/manifest.json'
 ];
