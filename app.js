@@ -12,10 +12,10 @@ class WaterTracker {
         // Данные для графика
         this.hourlyData = this.initHourlyData();
         
-        // Переменные для зажатия кнопок
-        this.holdTimer = null;
-        this.holdAmount = 0;
+        // Простые переменные для зажатия
         this.isHolding = false;
+        this.holdStartTime = 0;
+        this.holdAmount = 0;
         
         this.init();
     }
@@ -111,6 +111,7 @@ class WaterTracker {
         if (this.isAnimating) return;
         if (amount <= 0) return;
         
+        console.log(`Добавляем воду: ${amount} мл`);
         this.isAnimating = true;
         const oldWaterAmount = this.waterAmount;
         
@@ -176,6 +177,7 @@ class WaterTracker {
             return;
         }
         
+        console.log(`Удаляем воду: ${amount} мл`);
         this.isAnimating = true;
         const oldWaterAmount = this.waterAmount;
         
@@ -474,49 +476,15 @@ class WaterTracker {
         }
     }
 
-    // Функции для зажатия кнопок
-    startHold(amount) {
-        if (this.isHolding) return;
-        
-        this.isHolding = true;
-        this.holdAmount = amount;
-        
-        // Добавляем класс на кнопку (визуальная обратная связь)
-        const buttons = document.querySelectorAll(`[data-amount="${amount}"]`);
-        buttons.forEach(btn => btn.classList.add('hold-active'));
-        
-        // Вибрация (если поддерживается)
-        if (navigator.vibrate) {
-            navigator.vibrate(50);
+    // ПРОСТЫЕ ФУНКЦИИ ДЛЯ КНОПОК
+    handleButtonAction(amount, isHold) {
+        if (isHold) {
+            // Если зажатие - удаляем
+            this.removeWater(amount);
+        } else {
+            // Если короткое нажатие - добавляем
+            this.addWater(amount);
         }
-    }
-
-    endHold() {
-        if (!this.isHolding) return;
-        
-        // Убираем класс с кнопки
-        const buttons = document.querySelectorAll('.action-btn.hold-active');
-        buttons.forEach(btn => btn.classList.remove('hold-active'));
-        
-        // Удаляем воду (так как это было зажатие)
-        this.removeWater(this.holdAmount);
-        
-        this.isHolding = false;
-        this.holdAmount = 0;
-    }
-
-    cancelHold() {
-        if (!this.isHolding) return;
-        
-        // Убираем класс с кнопки
-        const buttons = document.querySelectorAll('.action-btn.hold-active');
-        buttons.forEach(btn => btn.classList.remove('hold-active'));
-        
-        // Добавляем воду (так как это было короткое нажатие)
-        this.addWater(this.holdAmount);
-        
-        this.isHolding = false;
-        this.holdAmount = 0;
     }
 
     resetWater() {
@@ -680,6 +648,107 @@ class WaterTracker {
                 this.addCustomWater();
             }
         });
+        
+        // ПРОСТАЯ обработка кнопок через делегирование событий
+        this.setupButtonListeners();
+    }
+    
+    setupButtonListeners() {
+        const actionButtons = document.querySelectorAll('.action-btn');
+        
+        actionButtons.forEach(button => {
+            // Удаляем старые обработчики
+            button.removeAttribute('ontouchstart');
+            button.removeAttribute('ontouchend');
+            button.removeAttribute('onmousedown');
+            button.removeAttribute('onmouseup');
+            button.removeAttribute('onmouseleave');
+            
+            // Добавляем новые обработчики
+            button.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                const amount = parseInt(button.dataset.amount);
+                this.startButtonHold(amount, button);
+            });
+            
+            button.addEventListener('mouseup', (e) => {
+                e.preventDefault();
+                const amount = parseInt(button.dataset.amount);
+                this.endButtonHold(amount, button);
+            });
+            
+            button.addEventListener('mouseleave', (e) => {
+                e.preventDefault();
+                const amount = parseInt(button.dataset.amount);
+                this.cancelButtonHold(amount, button);
+            });
+            
+            // Для тач-устройств
+            button.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const amount = parseInt(button.dataset.amount);
+                this.startButtonHold(amount, button);
+            });
+            
+            button.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                const amount = parseInt(button.dataset.amount);
+                this.endButtonHold(amount, button);
+            });
+            
+            button.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                const amount = parseInt(button.dataset.amount);
+                this.cancelButtonHold(amount, button);
+            });
+        });
+    }
+    
+    // ПРОСТЫЕ функции для обработки кнопок
+    startButtonHold(amount, button) {
+        console.log('Начало нажатия кнопки:', amount);
+        this.isHolding = true;
+        this.holdStartTime = Date.now();
+        this.holdAmount = amount;
+        
+        // Визуальная обратная связь
+        button.classList.add('hold-active');
+        
+        // Вибрация
+        if (navigator.vibrate) navigator.vibrate(30);
+    }
+    
+    endButtonHold(amount, button) {
+        console.log('Конец нажатия кнопки:', amount);
+        button.classList.remove('hold-active');
+        
+        if (!this.isHolding) return;
+        
+        const holdDuration = Date.now() - this.holdStartTime;
+        console.log('Длительность нажатия:', holdDuration);
+        
+        if (holdDuration > 500) {
+            // Зажатие - удаление
+            console.log('Зажатие - удаление');
+            this.removeWater(amount);
+        } else {
+            // Короткое нажатие - добавление
+            console.log('Короткое нажатие - добавление');
+            this.addWater(amount);
+        }
+        
+        this.isHolding = false;
+    }
+    
+    cancelButtonHold(amount, button) {
+        console.log('Отмена нажатия кнопки:', amount);
+        button.classList.remove('hold-active');
+        
+        if (!this.isHolding) return;
+        
+        // Если отменили - считаем коротким нажатием (добавление)
+        this.addWater(amount);
+        this.isHolding = false;
     }
 
     addCustomWater() {
@@ -713,98 +782,13 @@ class WaterTracker {
     }
 }
 
-// Глобальные переменные для обработки кнопок
-let activeButton = null;
-let holdTimer = null;
-
-// Функция начала нажатия
-function startButtonPress(event, amount) {
-    event.preventDefault();
-    
-    // Запоминаем активную кнопку
-    activeButton = event.currentTarget;
-    
-    // Начинаем зажатие
-    if (window.waterTracker) {
-        window.waterTracker.startHold(amount);
-    }
-    
-    return false;
-}
-
-// Функция окончания нажатия
-function endButtonPress(event, amount) {
-    event.preventDefault();
-    
-    // Если это не та же кнопка - игнорируем
-    if (event.currentTarget !== activeButton) return;
-    
-    // Проверяем время нажатия
-    const pressTime = parseInt(event.currentTarget.dataset.pressTime || '0');
-    const holdTime = Date.now() - pressTime;
-    
-    // Если было зажатие - удаляем, иначе добавляем
-    if (window.waterTracker) {
-        if (holdTime > 500) { // Больше 500ms = удаление
-            window.waterTracker.endHold();
-        } else { // Меньше 500ms = добавление
-            window.waterTracker.cancelHold();
-        }
-    }
-    
-    activeButton = null;
-    return false;
-}
-
-// Функция отмены нажатия
-function cancelButtonPress(event, amount) {
-    event.preventDefault();
-    
-    // Если мышь ушла с активной кнопки - отменяем
-    if (activeButton === event.currentTarget) {
-        if (window.waterTracker) {
-            // Если ушли с кнопки - считаем это коротким нажатием (добавление)
-            window.waterTracker.cancelHold();
-        }
-        activeButton = null;
-    }
-    
-    return false;
-}
-
-// Сохраняем время нажатия
-document.addEventListener('mousedown', function(e) {
-    if (e.target.closest('.action-btn')) {
-        e.target.closest('.action-btn').dataset.pressTime = Date.now();
-    }
-});
-
-document.addEventListener('touchstart', function(e) {
-    if (e.target.closest('.action-btn')) {
-        e.target.closest('.action-btn').dataset.pressTime = Date.now();
-    }
-});
-
-// Запрещаем контекстное меню на кнопках
-document.addEventListener('contextmenu', function(e) {
-    if (e.target.closest('.action-btn')) {
-        e.preventDefault();
-    }
-});
-
-// Глобальная функция для обновления цели
+// Глобальные функции
 function updateTarget() {
     if (window.waterTracker) {
         window.waterTracker.updateTarget();
     }
 }
 
-// Инициализация приложения
-document.addEventListener('DOMContentLoaded', () => {
-    window.waterTracker = new WaterTracker();
-});
-
-// Глобальные функции для кнопок
 function addCustomWater() {
     if (window.waterTracker) window.waterTracker.addCustomWater();
 }
@@ -816,3 +800,16 @@ function removeCustomWater() {
 function resetWater() {
     if (window.waterTracker) window.waterTracker.resetWater();
 }
+
+// Запрещаем контекстное меню на кнопках
+document.addEventListener('contextmenu', function(e) {
+    if (e.target.closest('.action-btn')) {
+        e.preventDefault();
+    }
+});
+
+// Инициализация приложения
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Инициализация WaterTracker...');
+    window.waterTracker = new WaterTracker();
+});
