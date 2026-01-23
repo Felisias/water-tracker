@@ -3,7 +3,7 @@ class HealthFlowDB {
     constructor() {
         this.db = null;
         this.dbName = 'HealthFlowDB';
-        this.version = 1;
+        this.version = 2; // Увеличиваем версию для новых хранилищ
     }
     
     // Инициализация базы данных
@@ -27,17 +27,19 @@ class HealthFlowDB {
                         autoIncrement: true 
                     });
                     exerciseStore.createIndex('category', 'category', { unique: false });
-                    exerciseStore.createIndex('name', 'name', { unique: true });
+                    exerciseStore.createIndex('name', 'name', { unique: false });
+                    exerciseStore.createIndex('createdAt', 'createdAt', { unique: false });
                 }
                 
-                // Создаём хранилище для тренировок
+                // Создаём хранилище для тренировок (шаблоны)
                 if (!db.objectStoreNames.contains('workouts')) {
                     const workoutStore = db.createObjectStore('workouts', { 
                         keyPath: 'id',
                         autoIncrement: true 
                     });
-                    workoutStore.createIndex('date', 'date', { unique: false });
                     workoutStore.createIndex('name', 'name', { unique: false });
+                    workoutStore.createIndex('createdAt', 'createdAt', { unique: false });
+                    workoutStore.createIndex('isFavorite', 'isFavorite', { unique: false });
                 }
                 
                 // Создаём хранилище для истории тренировок
@@ -48,44 +50,28 @@ class HealthFlowDB {
                     });
                     historyStore.createIndex('workoutId', 'workoutId', { unique: false });
                     historyStore.createIndex('date', 'date', { unique: false });
+                    historyStore.createIndex('completedAt', 'completedAt', { unique: false });
                 }
-
-
-
-
-
-                                      // В db.js в request.onupgradeneeded добавим:
-                if (!db.objectStoreNames.contains('exercises')) {
-                    const exerciseStore = db.createObjectStore('exercises', { 
+                
+                // Создаём хранилище для статистики упражнений
+                if (!db.objectStoreNames.contains('exerciseStats')) {
+                    const statsStore = db.createObjectStore('exerciseStats', { 
                         keyPath: 'id',
                         autoIncrement: true 
                     });
-                    exerciseStore.createIndex('category', 'category', { unique: false });
-                    exerciseStore.createIndex('name', 'name', { unique: false });
+                    statsStore.createIndex('exerciseId', 'exerciseId', { unique: false });
+                    statsStore.createIndex('date', 'date', { unique: false });
                 }
                 
-                if (!db.objectStoreNames.contains('workouts')) {
-                    const workoutStore = db.createObjectStore('workouts', { 
+                // Создаём хранилище для прогресса
+                if (!db.objectStoreNames.contains('progress')) {
+                    const progressStore = db.createObjectStore('progress', { 
                         keyPath: 'id',
                         autoIncrement: true 
                     });
-                    workoutStore.createIndex('date', 'date', { unique: false });
-                    workoutStore.createIndex('type', 'type', { unique: false });
+                    progressStore.createIndex('type', 'type', { unique: false });
+                    progressStore.createIndex('date', 'date', { unique: false });
                 }
-                
-                if (!db.objectStoreNames.contains('workoutHistory')) {
-                    const historyStore = db.createObjectStore('workoutHistory', { 
-                        keyPath: 'id',
-                        autoIncrement: true 
-                    });
-                    historyStore.createIndex('workoutId', 'workoutId', { unique: false });
-                    historyStore.createIndex('date', 'date', { unique: false });
-                }             
-
-
-
-
-                
             };
         });
     }
@@ -113,11 +99,22 @@ class HealthFlowDB {
         });
     }
     
-    async getAll(storeName) {
+    async getAll(storeName, indexName = null, query = null) {
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction([storeName], 'readonly');
-            const store = transaction.objectStore(storeName);
-            const request = store.getAll();
+            let store = transaction.objectStore(storeName);
+            
+            let request;
+            if (indexName && query) {
+                const index = store.index(indexName);
+                const range = IDBKeyRange.only(query);
+                request = index.getAll(range);
+            } else if (indexName) {
+                const index = store.index(indexName);
+                request = index.getAll();
+            } else {
+                request = store.getAll();
+            }
             
             request.onsuccess = () => resolve(request.result);
             request.onerror = () => reject(request.error);
@@ -145,8 +142,30 @@ class HealthFlowDB {
             request.onerror = () => reject(request.error);
         });
     }
+    
+    async query(storeName, indexName, query) {
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([storeName], 'readonly');
+            const store = transaction.objectStore(storeName);
+            const index = store.index(indexName);
+            const request = index.getAll(query);
+            
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+    
+    async clearStore(storeName) {
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([storeName], 'readwrite');
+            const store = transaction.objectStore(storeName);
+            const request = store.clear();
+            
+            request.onsuccess = () => resolve(true);
+            request.onerror = () => reject(request.error);
+        });
+    }
 }
 
 // Экспортируем экземпляр базы данных
-
 export const db = new HealthFlowDB();
