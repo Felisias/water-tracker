@@ -1,3 +1,1087 @@
-<div class="page" id="workoutsPage">
-    <!-- Контент загрузится через app.js -->
-</div>
+[file name]: workouts.html
+[file content begin]
+<template id="workoutsTemplate">
+    <header class="page-header">
+        <h1 class="page-title">Тренировки</h1>
+        <div class="page-controls">
+            <div class="skin-counter">
+                ✨ <span id="workoutSkinCount">0</span>
+            </div>
+            <button class="theme-toggle" id="workoutThemeToggle">
+                <div class="theme-icon">🌙</div>
+            </button>
+        </div>
+    </header>
+    
+    <div class="content-container">
+        <!-- Вкладки -->
+        <div class="tabs" id="workoutTabs">
+            <button class="tab-btn active" data-tab="exercises">Упражнения</button>
+            <button class="tab-btn" data-tab="workouts">Мои тренировки</button>
+            <button class="tab-btn" data-tab="history">История</button>
+        </div>
+
+        <!-- Контейнер для контента вкладок -->
+        <div class="tab-content" id="tabContent">
+            <!-- Вкладка УПРАЖНЕНИЯ -->
+            <div class="tab-pane active" id="exercisesTab">
+                <!-- Поиск и фильтры -->
+                <div class="search-section">
+                    <div class="search-box">
+                        <input 
+                            type="text" 
+                            id="exerciseSearch" 
+                            placeholder="🔍 Найти упражнение..."
+                            class="search-input"
+                        >
+                        <button class="search-clear" id="clearSearch">✕</button>
+                    </div>
+                    <div class="category-filters" id="categoryFilters">
+                        <!-- Категории будут загружены через JS -->
+                    </div>
+                </div>
+
+                <!-- Список упражнений -->
+                <div class="exercises-list" id="exercisesList">
+                    <div class="empty-state">
+                        <div class="empty-icon">🏋️</div>
+                        <div class="empty-text">Добавьте первое упражнение!</div>
+                        <button class="add-first-btn" id="addFirstExercise">
+                            <span class="btn-icon">+</span>
+                            Добавить упражнение
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Кнопка добавления -->
+                <div class="fab-container">
+                    <button class="fab-btn" id="addExerciseBtn">
+                        <span class="fab-icon">+</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Вкладка МОИ ТРЕНИРОВКИ -->
+            <div class="tab-pane" id="workoutsTab">
+                <!-- Список тренировок -->
+                <div class="workouts-list" id="workoutsList">
+                    <div class="empty-state">
+                        <div class="empty-icon">📋</div>
+                        <div class="empty-text">Создайте первую тренировку!</div>
+                        <button class="add-first-btn" id="addFirstWorkout">
+                            <span class="btn-icon">+</span>
+                            Создать тренировку
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Кнопка создания -->
+                <div class="fab-container">
+                    <button class="fab-btn" id="createWorkoutBtn">
+                        <span class="fab-icon">+</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Вкладка ИСТОРИЯ -->
+            <div class="tab-pane" id="historyTab">
+                <!-- Статистика -->
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <div class="stat-icon">🔥</div>
+                        <div class="stat-value" id="streakCount">0</div>
+                        <div class="stat-label">Дней подряд</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-value" id="totalWorkouts">0</div>
+                        <div class="stat-label">Всего тренировок</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✨</div>
+                        <div class="stat-value" id="totalWorkoutSkins">0</div>
+                        <div class="stat-label">Скинтов заработано</div>
+                    </div>
+                </div>
+
+                <!-- История тренировок -->
+                <div class="history-list" id="workoutHistoryList">
+                    <div class="empty-state">
+                        <div class="empty-icon">📅</div>
+                        <div class="empty-text">Выполните первую тренировку!</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно добавления упражнения -->
+    <div class="modal" id="exerciseModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="exerciseModalTitle">Новое упражнение</h3>
+                <button class="modal-close" id="closeExerciseModal">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="exerciseForm">
+                    <div class="form-group">
+                        <label class="form-label">Название *</label>
+                        <input 
+                            type="text" 
+                            id="exerciseName" 
+                            class="form-input"
+                            placeholder="Например: Жим лёжа"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Категория *</label>
+                        <div class="category-select" id="categorySelect">
+                            <!-- Категории загружаются через JS -->
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Эмодзи</label>
+                        <div class="emoji-picker">
+                            <input 
+                                type="text" 
+                                id="exerciseEmoji" 
+                                class="emoji-input"
+                                placeholder="🏋️"
+                                maxlength="2"
+                            >
+                            <div class="emoji-suggestions">
+                                <span class="emoji-suggestion" data-emoji="🏋️">🏋️</span>
+                                <span class="emoji-suggestion" data-emoji="💪">💪</span>
+                                <span class="emoji-suggestion" data-emoji="🦵">🦵</span>
+                                <span class="emoji-suggestion" data-emoji="🏃">🏃</span>
+                                <span class="emoji-suggestion" data-emoji="🔥">🔥</span>
+                                <span class="emoji-suggestion" data-emoji="✨">✨</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Описание</label>
+                        <textarea 
+                            id="exerciseDescription" 
+                            class="form-textarea"
+                            placeholder="Опишите технику выполнения, важные моменты..."
+                            rows="3"
+                        ></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Подходы по умолчанию</label>
+                        <input 
+                            type="number" 
+                            id="exerciseSets" 
+                            class="form-input"
+                            min="1"
+                            max="10"
+                            value="3"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Повторения по умолчанию</label>
+                        <input 
+                            type="text" 
+                            id="exerciseReps" 
+                            class="form-input"
+                            placeholder="8-12"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Советы</label>
+                        <textarea 
+                            id="exerciseTips" 
+                            class="form-textarea"
+                            placeholder="Важные нюансы выполнения..."
+                            rows="2"
+                        ></textarea>
+                    </div>
+
+                    <input type="hidden" id="exerciseId" value="">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="modal-btn secondary" id="cancelExerciseBtn">
+                    Отмена
+                </button>
+                <button type="submit" form="exerciseForm" class="modal-btn primary" id="saveExerciseBtn">
+                    Сохранить
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно тренировки -->
+    <div class="modal" id="workoutModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="workoutModalTitle">Новая тренировка</h3>
+                <button class="modal-close" id="closeWorkoutModal">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="workoutForm">
+                    <div class="form-group">
+                        <label class="form-label">Название тренировки *</label>
+                        <input 
+                            type="text" 
+                            id="workoutName" 
+                            class="form-input"
+                            placeholder="Например: Тренировка груди"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Описание</label>
+                        <textarea 
+                            id="workoutDescription" 
+                            class="form-textarea"
+                            placeholder="Опишите цель тренировки..."
+                            rows="2"
+                        ></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Упражнения *</label>
+                        <div class="exercise-selector" id="exerciseSelector">
+                            <div class="selected-exercises" id="selectedExercises">
+                                <!-- Выбранные упражнения -->
+                            </div>
+                            <button type="button" class="add-exercise-btn" id="addExerciseToWorkout">
+                                <span class="btn-icon">+</span>
+                                Добавить упражнение
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="workout-exercises-preview" id="workoutExercisesPreview">
+                        <!-- Предпросмотр упражнений с настройками -->
+                    </div>
+
+                    <input type="hidden" id="workoutId" value="">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="modal-btn secondary" id="cancelWorkoutBtn">
+                    Отмена
+                </button>
+                <button type="submit" form="workoutForm" class="modal-btn primary" id="saveWorkoutBtn">
+                    Сохранить
+                </button>
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- Стили для модуля тренировок -->
+<style>
+/* Вкладки */
+.tabs {
+    display: flex;
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 4px;
+    margin-bottom: 20px;
+    border: 2px solid var(--border-light);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px 8px;
+    border: none;
+    background: transparent;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+    border-radius: var(--radius-sm);
+    text-align: center;
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    box-shadow: var(--shadow-light);
+}
+
+.tab-content {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+/* Поиск и фильтры */
+.search-section {
+    margin-bottom: 20px;
+}
+
+.search-box {
+    position: relative;
+    margin-bottom: 12px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 14px 45px 14px 16px;
+    background: var(--surface);
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius);
+    font-size: 1rem;
+    color: var(--text-primary);
+    outline: none;
+    transition: var(--transition);
+}
+
+.search-input:focus {
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(6, 180, 143, 0.1);
+}
+
+.search-clear {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-light);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.category-filters {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scrollbar-width: none;
+}
+
+.category-filters::-webkit-scrollbar {
+    display: none;
+}
+
+.category-filter {
+    padding: 8px 14px;
+    background: var(--surface);
+    border: 2px solid var(--border-light);
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.category-filter:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary-light);
+}
+
+.category-filter.active {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    border-color: var(--primary);
+}
+
+/* Списки */
+.exercises-list,
+.workouts-list {
+    min-height: 300px;
+}
+
+.exercise-card,
+.workout-card {
+    background: var(--surface);
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: var(--transition);
+    animation: slideIn 0.3s ease-out;
+}
+
+.exercise-card:hover,
+.workout-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary-light);
+    box-shadow: var(--shadow);
+}
+
+.exercise-header,
+.workout-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.exercise-emoji {
+    font-size: 1.8rem;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(6, 180, 143, 0.1);
+    border-radius: var(--radius-sm);
+}
+
+.exercise-info {
+    flex: 1;
+}
+
+.exercise-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.exercise-category {
+    font-size: 0.8rem;
+    color: var(--primary);
+    background: rgba(6, 180, 143, 0.1);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.exercise-description {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    margin-bottom: 12px;
+}
+
+.exercise-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 0.85rem;
+    color: var(--text-light);
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.workout-info {
+    flex: 1;
+}
+
+.workout-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.workout-stats {
+    display: flex;
+    gap: 12px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.workout-exercises {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.workout-exercise-tag {
+    background: rgba(6, 180, 143, 0.05);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* Кнопки действий */
+.exercise-actions,
+.workout-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.action-btn.primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    border-color: var(--primary);
+}
+
+.action-btn.secondary {
+    background: var(--surface);
+    color: var(--text-primary);
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-light);
+}
+
+/* Пустые состояния */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-light);
+}
+
+.empty-icon {
+    font-size: 3.5rem;
+    margin-bottom: 16px;
+    opacity: 0.3;
+}
+
+.empty-text {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--text-secondary);
+}
+
+.add-first-btn {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    padding: 14px 28px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition);
+}
+
+.add-first-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(6, 180, 143, 0.3);
+}
+
+/* FAB кнопка */
+.fab-container {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    z-index: 100;
+}
+
+.fab-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border: none;
+    color: white;
+    font-size: 1.8rem;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(6, 180, 143, 0.4);
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fab-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 25px rgba(6, 180, 143, 0.5);
+}
+
+/* Статистика */
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: var(--surface);
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius);
+    padding: 16px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.stat-icon {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--primary-dark);
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* История тренировок */
+.history-item {
+    background: var(--surface);
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    animation: slideIn 0.3s ease-out;
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.history-date {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.history-duration {
+    font-size: 0.85rem;
+    color: var(--primary);
+    background: rgba(6, 180, 143, 0.1);
+    padding: 4px 10px;
+    border-radius: 50px;
+}
+
+.history-workout-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.history-stats {
+    display: flex;
+    gap: 16px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.history-skins {
+    color: #FF9A76;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Модальные окна */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow);
+    animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.modal-header h3 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-light);
+    cursor: pointer;
+    padding: 4px;
+    transition: var(--transition);
+}
+
+.modal-close:hover {
+    color: var(--error);
+    transform: rotate(90deg);
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 12px;
+    padding: 20px 24px;
+    border-top: 2px solid var(--border-light);
+}
+
+.modal-btn {
+    flex: 1;
+    padding: 14px;
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.modal-btn.secondary {
+    background: var(--surface);
+    color: var(--text-primary);
+}
+
+.modal-btn.primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    border-color: var(--primary);
+}
+
+.modal-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-light);
+}
+
+/* Формы */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.form-input,
+.form-textarea {
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius);
+    font-size: 1rem;
+    color: var(--text-primary);
+    outline: none;
+    transition: var(--transition);
+    font-family: inherit;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(6, 180, 143, 0.1);
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Выбор категории */
+.category-select {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.category-option {
+    padding: 12px 8px;
+    background: var(--surface);
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.category-option:hover {
+    border-color: var(--primary-light);
+    transform: translateY(-2px);
+}
+
+.category-option.selected {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    border-color: var(--primary);
+}
+
+/* Подбор эмодзи */
+.emoji-picker {
+    position: relative;
+}
+
+.emoji-input {
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius);
+    font-size: 1.2rem;
+    text-align: center;
+    outline: none;
+}
+
+.emoji-suggestions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+.emoji-suggestion {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface);
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.emoji-suggestion:hover {
+    transform: scale(1.1);
+    border-color: var(--primary-light);
+}
+
+/* Выбор упражнений для тренировки */
+.exercise-selector {
+    background: var(--surface);
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius);
+    padding: 16px;
+}
+
+.selected-exercises {
+    min-height: 100px;
+    margin-bottom: 12px;
+}
+
+.add-exercise-btn {
+    width: 100%;
+    padding: 14px;
+    background: rgba(6, 180, 143, 0.1);
+    border: 2px dashed var(--primary-light);
+    border-radius: var(--radius);
+    color: var(--primary);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.add-exercise-btn:hover {
+    background: rgba(6, 180, 143, 0.2);
+    transform: translateY(-2px);
+}
+
+.workout-exercise-item {
+    background: var(--surface);
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: var(--transition);
+}
+
+.workout-exercise-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.workout-exercise-details {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.setting-input {
+    width: 60px;
+    padding: 8px;
+    background: var(--surface);
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    text-align: center;
+    outline: none;
+}
+
+.remove-exercise-btn {
+    background: none;
+    border: none;
+    color: var(--error);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 4px;
+}
+
+/* Адаптивность */
+@media (max-width: 500px) {
+    .tabs {
+        padding: 2px;
+    }
+    
+    .tab-btn {
+        padding: 10px 6px;
+        font-size: 0.8rem;
+    }
+    
+    .exercise-card,
+    .workout-card {
+        padding: 14px;
+    }
+    
+    .exercise-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .exercise-emoji {
+        width: 40px;
+        height: 40px;
+        font-size: 1.5rem;
+    }
+    
+    .stats-cards {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .modal-content {
+        border-radius: var(--radius);
+        max-height: 80vh;
+    }
+    
+    .modal-body {
+        padding: 16px;
+    }
+    
+    .category-select {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .fab-container {
+        bottom: 70px;
+        right: 16px;
+    }
+    
+    .fab-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+    }
+}
+</style>
+[file content end]
