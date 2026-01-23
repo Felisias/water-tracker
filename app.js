@@ -9,7 +9,7 @@ class WaterTracker {
         this.isAnimating = false;
         this.skinCounter = 0;
         
-        // Данные для графика
+        // Данные для графика: накапливаемая сумма по часам
         this.hourlyData = this.initHourlyData();
         
         // Простые переменные для зажатия
@@ -24,18 +24,9 @@ class WaterTracker {
         this.loadData();
         this.setupEventListeners();
         this.updateDisplay();
-        this.updateChart();
+        this.updateWaveChart();
+        this.updateCurrentTime();
         this.startClock();
-        
-        // Автообновление расчетов скинтов
-        document.getElementById('customAmount').addEventListener('input', (e) => {
-            this.updateSkinCalculation(e.target.value);
-        });
-        
-        // Автосохранение цели
-        document.getElementById('targetInput').addEventListener('change', () => {
-            this.updateTarget();
-        });
     }
 
     initHourlyData() {
@@ -43,8 +34,8 @@ class WaterTracker {
         for (let i = 0; i < 24; i++) {
             data.push({
                 hour: i,
-                amount: 0,
-                projected: 0
+                cumulative: 0, // Накопленная сумма к этому часу
+                addedThisHour: 0 // Добавлено в этот час
             });
         }
         return data;
@@ -63,6 +54,9 @@ class WaterTracker {
                 this.skinCounter = data.skinCounter || (this.waterAmount % 250);
                 this.todaySkins = Math.floor(this.waterAmount / 250);
                 this.hourlyData = data.hourlyData || this.initHourlyData();
+                
+                // Пересчитываем накопленную сумму
+                this.recalculateCumulative();
             }
         }
         
@@ -82,6 +76,15 @@ class WaterTracker {
         if (savedTarget) {
             this.targetAmount = parseInt(savedTarget);
             document.getElementById('targetInput').value = this.targetAmount;
+            document.getElementById('targetAmountDisplay').textContent = `${this.targetAmount} мл`;
+        }
+    }
+
+    recalculateCumulative() {
+        let cumulative = 0;
+        for (let i = 0; i < 24; i++) {
+            cumulative += this.hourlyData[i].addedThisHour;
+            this.hourlyData[i].cumulative = cumulative;
         }
     }
 
@@ -126,7 +129,8 @@ class WaterTracker {
         this.waterAmount += amount;
         
         // Обновляем данные для графика
-        this.hourlyData[hour].amount += amount;
+        this.hourlyData[hour].addedThisHour += amount;
+        this.recalculateCumulative();
         
         // Обработка скинтов
         const skinsEarned = this.calculateSkins(amount, true);
@@ -152,7 +156,7 @@ class WaterTracker {
         this.saveData();
         this.animateBottleChange(oldWaterAmount, this.waterAmount, true);
         this.updateDisplay();
-        this.updateChart();
+        this.updateWaveChart();
         
         // Уведомление
         let message = `+${amount} мл добавлено`;
@@ -198,8 +202,11 @@ class WaterTracker {
         // Удаляем воду
         this.waterAmount -= actualRemove;
         
-        // Обновляем данные для графика
-        this.hourlyData[hour].amount = Math.max(0, this.hourlyData[hour].amount - actualRemove);
+        // Обновляем данные для графика (не позволяем уйти в минус)
+        const hourData = this.hourlyData[hour];
+        const oldAdded = hourData.addedThisHour;
+        hourData.addedThisHour = Math.max(0, oldAdded - actualRemove);
+        this.recalculateCumulative();
         
         // Обработка скинтов (отнимаем если нужно)
         const skinsLost = this.calculateSkins(actualRemove, false);
@@ -225,7 +232,7 @@ class WaterTracker {
         this.saveData();
         this.animateBottleChange(oldWaterAmount, this.waterAmount, false);
         this.updateDisplay();
-        this.updateChart();
+        this.updateWaveChart();
         
         this.showNotification(`−${actualRemove} мл удалено`, 'remove');
         this.playSound(false);
@@ -241,12 +248,10 @@ class WaterTracker {
             this.skinCounter = (oldCounter + amount) % 250;
             return Math.floor((oldCounter + amount) / 250);
         } else {
-            // При удалении рассчитываем потерянные скинты
             let tempCounter = this.skinCounter;
             let skinsLost = 0;
             let remaining = amount;
             
-            // Сначала проверяем текущий скинт-счетчик
             if (tempCounter > 0) {
                 const fromCounter = Math.min(tempCounter, remaining);
                 tempCounter -= fromCounter;
@@ -258,13 +263,10 @@ class WaterTracker {
                 }
             }
             
-            // Затем считаем полные скинты
             skinsLost += Math.floor(remaining / 250);
             remaining = remaining % 250;
             
-            // Обновляем счетчик
             this.skinCounter = tempCounter;
-            
             return skinsLost;
         }
     }
@@ -276,7 +278,6 @@ class WaterTracker {
             const spark = document.createElement('div');
             spark.className = `spark ${isNegative ? 'negative' : ''}`;
             
-            // Создаем искры вокруг бутылки
             const x = 100 + Math.random() * 200;
             const y = window.innerHeight / 2 - 50 + Math.random() * 100;
             
@@ -286,9 +287,7 @@ class WaterTracker {
             
             container.appendChild(spark);
             
-            setTimeout(() => {
-                if (spark.parentNode) spark.remove();
-            }, 2000);
+            setTimeout(() => spark.remove(), 2000);
         }
     }
 
@@ -320,7 +319,6 @@ class WaterTracker {
             const elapsed = Date.now() - startTime;
             const progress = Math.min(elapsed / duration, 1);
             
-            // Кубическая easing функция
             const easeProgress = 1 - Math.pow(1 - progress, 3);
             const currentValue = Math.round(oldValue + difference * easeProgress);
             
@@ -335,7 +333,7 @@ class WaterTracker {
     }
 
     createRippleEffect(isAdding) {
-        const bottle = document.querySelector('.bottle');
+        const bottle = document.querySelector('.bottle-large');
         const ripple = document.createElement('div');
         
         ripple.style.cssText = `
@@ -353,7 +351,6 @@ class WaterTracker {
         `;
         
         bottle.appendChild(ripple);
-        
         setTimeout(() => ripple.remove(), 800);
     }
 
@@ -363,9 +360,19 @@ class WaterTracker {
         
         if (newTarget && newTarget >= 500 && newTarget <= 5000) {
             this.targetAmount = newTarget;
+            document.getElementById('targetAmountDisplay').textContent = `${newTarget} мл`;
+            
+            // Обновляем активную пресет-кнопку
+            document.querySelectorAll('.target-preset').forEach(btn => {
+                btn.classList.remove('active');
+                if (parseInt(btn.dataset.target) === newTarget) {
+                    btn.classList.add('active');
+                }
+            });
+            
             this.saveData();
             this.updateDisplay();
-            this.updateChart();
+            this.updateWaveChart();
             this.showNotification(`Цель обновлена: ${newTarget} мл`, 'success');
         } else {
             this.showNotification('Цель должна быть от 500 до 5000 мл', 'success');
@@ -373,10 +380,17 @@ class WaterTracker {
         }
     }
 
-    updateChart() {
-        const chartElement = document.getElementById('waterChart');
+    setTargetFromPreset(target) {
+        document.getElementById('targetInput').value = target;
+        this.updateTarget();
+    }
+
+    updateWaveChart() {
+        const chartElement = document.getElementById('waveChart');
         const now = new Date();
         const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        const currentTime = currentHour + currentMinute / 60;
         
         // Очищаем график
         chartElement.innerHTML = '';
@@ -393,96 +407,132 @@ class WaterTracker {
             return;
         }
         
-        // Рассчитываем прогноз
-        this.calculateProjection();
+        // Создаем SVG для графика-волны
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('width', '100%');
+        svg.setAttribute('height', '100%');
+        svg.setAttribute('viewBox', '0 0 100 100');
+        svg.setAttribute('preserveAspectRatio', 'none');
         
         // Находим максимальное значение для масштабирования
-        let maxValue = this.targetAmount;
+        let maxCumulative = this.targetAmount;
         for (let i = 0; i <= currentHour; i++) {
-            maxValue = Math.max(maxValue, this.hourlyData[i].amount, this.hourlyData[i].projected);
+            maxCumulative = Math.max(maxCumulative, this.hourlyData[i].cumulative);
         }
         
-        // Создаем оси
-        const axisY = document.createElement('div');
-        axisY.className = 'chart-axis chart-axis-y';
+        // Создаем данные для волны
+        const points = [];
+        const areaPoints = [];
         
-        // Добавляем значения на ось Y
-        const yValues = [0, Math.round(maxValue/2), maxValue];
-        yValues.forEach(value => {
-            const yLabel = document.createElement('div');
-            yLabel.textContent = value + ' мл';
-            axisY.appendChild(yLabel);
-        });
+        // Начинаем с точки (0, 100) - нижний левый угол
+        areaPoints.push('M 0,100 ');
         
-        const axisX = document.createElement('div');
-        axisX.className = 'chart-axis chart-axis-x';
-        
-        // Добавляем столбцы и метки на ось X
-        for (let i = 0; i < 24; i++) {
-            const hourData = this.hourlyData[i];
+        // Добавляем точку для каждого часа (до текущего времени)
+        for (let i = 0; i <= currentTime; i += 0.5) {
+            const hour = Math.floor(i);
+            const nextHour = Math.min(hour + 1, 23);
+            const progress = i - hour;
             
-            // Создаем столбец для реальных данных
-            if (hourData.amount > 0 || hourData.projected > 0) {
-                const bar = document.createElement('div');
-                bar.className = `chart-bar ${i > currentHour ? 'chart-bar-projected' : ''}`;
-                
-                // Высота столбца в зависимости от максимального значения
-                const barHeight = (Math.max(hourData.amount, hourData.projected) / maxValue) * 100;
-                bar.style.height = `${barHeight}%`;
-                bar.style.left = `${(i / 24) * 100}%`;
-                bar.style.transform = `translateX(-50%)`;
+            // Интерполируем значение между часами
+            let value;
+            if (hour < this.hourlyData.length - 1) {
+                const currentVal = this.hourlyData[Math.min(hour, 23)].cumulative;
+                const nextVal = this.hourlyData[Math.min(nextHour, 23)].cumulative;
+                value = currentVal + (nextVal - currentVal) * progress;
+            } else {
+                value = this.hourlyData[23].cumulative;
+            }
+            
+            const x = (i / 24) * 100;
+            const y = 100 - (value / maxCumulative) * 100;
+            
+            points.push({x, y, hour: Math.floor(i), value: Math.round(value)});
+            areaPoints.push(`L ${x},${y} `);
+        }
+        
+        // Завершаем область
+        areaPoints.push('L 100,100 Z');
+        
+        // Рисуем область под волной
+        const areaPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        areaPath.setAttribute('d', areaPoints.join(''));
+        areaPath.setAttribute('class', 'wave-area');
+        svg.appendChild(areaPath);
+        
+        // Рисуем линию волны
+        if (points.length > 1) {
+            const linePoints = points.map(p => `${p.x},${p.y}`).join(' ');
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+            path.setAttribute('points', linePoints);
+            path.setAttribute('class', 'wave-path');
+            svg.appendChild(path);
+        }
+        
+        // Добавляем точки на каждый час
+        points.forEach(point => {
+            if (point.hour === Math.floor(point.hour)) { // Только целые часы
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', point.x);
+                circle.setAttribute('cy', point.y);
+                circle.setAttribute('r', '3');
+                circle.setAttribute('class', 'wave-point');
+                circle.setAttribute('data-hour', point.hour);
+                circle.setAttribute('data-value', point.value);
                 
                 // Подсказка при наведении
-                const label = document.createElement('div');
-                label.className = 'chart-bar-label';
-                let labelText = `${i}:00 - ${i+1}:00`;
-                if (hourData.amount > 0) {
-                    labelText += `\nВыпито: ${hourData.amount} мл`;
-                }
-                if (hourData.projected > 0 && i > currentHour) {
-                    labelText += `\nПрогноз: ${Math.round(hourData.projected)} мл`;
-                }
-                label.textContent = labelText;
-                bar.appendChild(label);
+                circle.addEventListener('mouseover', (e) => {
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'wave-point-label';
+                    tooltip.textContent = `${point.hour}:00 - ${point.value} мл`;
+                    tooltip.style.left = `${e.clientX}px`;
+                    tooltip.style.top = `${e.clientY - 40}px`;
+                    document.body.appendChild(tooltip);
+                    circle._tooltip = tooltip;
+                });
                 
-                chartElement.appendChild(bar);
+                circle.addEventListener('mouseout', () => {
+                    if (circle._tooltip) {
+                        circle._tooltip.remove();
+                        delete circle._tooltip;
+                    }
+                });
+                
+                svg.appendChild(circle);
             }
-            
-            // Добавляем метку на ось X каждые 3 часа
-            if (i % 3 === 0) {
-                const xLabel = document.createElement('div');
-                xLabel.textContent = `${i}:00`;
-                axisX.appendChild(xLabel);
-            }
-        }
+        });
         
-        chartElement.appendChild(axisY);
-        chartElement.appendChild(axisX);
+        // Добавляем текущее время
+        const currentX = (currentTime / 24) * 100;
+        const currentLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        currentLine.setAttribute('x1', currentX);
+        currentLine.setAttribute('y1', '0');
+        currentLine.setAttribute('x2', currentX);
+        currentLine.setAttribute('y2', '100');
+        currentLine.setAttribute('stroke', 'var(--accent)');
+        currentLine.setAttribute('stroke-width', '2');
+        currentLine.setAttribute('stroke-dasharray', '5,5');
+        svg.appendChild(currentLine);
+        
+        chartElement.appendChild(svg);
+        
+        // Обновляем информацию под графиком
+        document.getElementById('chartTotal').textContent = `Всего: ${this.waterAmount} мл`;
     }
 
-    calculateProjection() {
+    updateCurrentTime() {
         const now = new Date();
-        const currentHour = now.getHours();
-        const remainingHours = 24 - currentHour - 1;
-        
-        if (remainingHours <= 0 || this.waterAmount >= this.targetAmount) return;
-        
-        const remainingAmount = this.targetAmount - this.waterAmount;
-        const amountPerHour = remainingAmount / remainingHours;
-        
-        // Заполняем прогноз для оставшихся часов
-        for (let i = currentHour + 1; i < 24; i++) {
-            this.hourlyData[i].projected = amountPerHour;
-        }
+        const timeString = now.toLocaleTimeString([], { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+        document.getElementById('currentTime').textContent = `Сейчас: ${timeString}`;
     }
 
     // ПРОСТЫЕ ФУНКЦИИ ДЛЯ КНОПОК
     handleButtonAction(amount, isHold) {
         if (isHold) {
-            // Если зажатие - удаляем
             this.removeWater(amount);
         } else {
-            // Если короткое нажатие - добавляем
             this.addWater(amount);
         }
     }
@@ -501,7 +551,7 @@ class WaterTracker {
             this.hourlyData = this.initHourlyData();
             this.saveData();
             this.updateDisplay();
-            this.updateChart();
+            this.updateWaveChart();
             this.showNotification('День сброшен! Начните заново 🌱', 'success');
         }
     }
@@ -523,6 +573,10 @@ class WaterTracker {
         
         // Обновление кнопки сброса
         document.getElementById('resetBtn').style.opacity = this.waterAmount > 0 ? '1' : '0.5';
+        
+        // Обновление расчета скинтов для кастомного ввода
+        const inputValue = document.getElementById('customAmount').value;
+        this.updateSkinCalculation(inputValue);
     }
 
     updateSkinCalculation(value) {
@@ -617,8 +671,12 @@ class WaterTracker {
         // Обновляем каждую минуту
         setInterval(() => {
             this.updateStats();
-            this.updateChart();
+            this.updateWaveChart();
+            this.updateCurrentTime();
         }, 60000);
+        
+        // Обновляем время сразу
+        this.updateCurrentTime();
     }
 
     setupEventListeners() {
@@ -642,163 +700,130 @@ class WaterTracker {
         const themeIcon = document.querySelector('.theme-icon');
         themeIcon.textContent = savedTheme === 'cozy' ? '🌙' : '☀️';
         
+        // Обработка кнопок действий
+        this.setupButtonListeners();
+        
         // Обработка кастомного ввода
+        document.getElementById('customAmount').addEventListener('input', (e) => {
+            this.updateSkinCalculation(e.target.value);
+        });
+        
         document.getElementById('customAmount').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                this.addCustomWater();
+                const amount = parseInt(document.getElementById('customAmount').value);
+                if (amount > 0) {
+                    this.addWater(amount);
+                    document.getElementById('customAmount').value = '';
+                }
             }
         });
         
-        // ПРОСТАЯ обработка кнопок через делегирование событий
-        this.setupButtonListeners();
+        // Кнопки добавления/удаления кастомного количества
+        document.querySelector('.custom-btn.add').addEventListener('click', () => {
+            const input = document.getElementById('customAmount');
+            const amount = parseInt(input.value);
+            if (amount && amount > 0) {
+                this.addWater(amount);
+                input.value = '';
+            }
+        });
+        
+        document.querySelector('.custom-btn.remove').addEventListener('click', () => {
+            const input = document.getElementById('customAmount');
+            const amount = parseInt(input.value);
+            if (amount && amount > 0) {
+                this.removeWater(amount);
+                input.value = '';
+            }
+        });
+        
+        // Кнопка сохранения цели
+        document.getElementById('saveTargetBtn').addEventListener('click', () => {
+            this.updateTarget();
+        });
+        
+        // Пресеты цели
+        document.querySelectorAll('.target-preset').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const target = parseInt(btn.dataset.target);
+                this.setTargetFromPreset(target);
+            });
+        });
+        
+        // Кнопка сброса
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            this.resetWater();
+        });
     }
     
     setupButtonListeners() {
         const actionButtons = document.querySelectorAll('.action-btn');
         
         actionButtons.forEach(button => {
-            // Удаляем старые обработчики
-            button.removeAttribute('ontouchstart');
-            button.removeAttribute('ontouchend');
-            button.removeAttribute('onmousedown');
-            button.removeAttribute('onmouseup');
-            button.removeAttribute('onmouseleave');
+            let holdTimeout;
+            let isLongPress = false;
             
-            // Добавляем новые обработчики
+            const startHold = () => {
+                const amount = parseInt(button.dataset.amount);
+                console.log('Начало нажатия:', amount);
+                
+                button.classList.add('hold-active');
+                
+                holdTimeout = setTimeout(() => {
+                    console.log('Долгое нажатие - удаление:', amount);
+                    isLongPress = true;
+                    this.removeWater(amount);
+                }, 500);
+            };
+            
+            const endHold = () => {
+                clearTimeout(holdTimeout);
+                button.classList.remove('hold-active');
+                
+                if (!isLongPress) {
+                    const amount = parseInt(button.dataset.amount);
+                    console.log('Короткое нажатие - добавление:', amount);
+                    this.addWater(amount);
+                }
+                
+                isLongPress = false;
+            };
+            
+            // Для мыши
             button.addEventListener('mousedown', (e) => {
                 e.preventDefault();
-                const amount = parseInt(button.dataset.amount);
-                this.startButtonHold(amount, button);
+                startHold();
             });
             
             button.addEventListener('mouseup', (e) => {
                 e.preventDefault();
-                const amount = parseInt(button.dataset.amount);
-                this.endButtonHold(amount, button);
+                endHold();
             });
             
-            button.addEventListener('mouseleave', (e) => {
-                e.preventDefault();
-                const amount = parseInt(button.dataset.amount);
-                this.cancelButtonHold(amount, button);
+            button.addEventListener('mouseleave', () => {
+                clearTimeout(holdTimeout);
+                button.classList.remove('hold-active');
+                isLongPress = false;
             });
             
             // Для тач-устройств
             button.addEventListener('touchstart', (e) => {
                 e.preventDefault();
-                const amount = parseInt(button.dataset.amount);
-                this.startButtonHold(amount, button);
+                startHold();
             });
             
             button.addEventListener('touchend', (e) => {
                 e.preventDefault();
-                const amount = parseInt(button.dataset.amount);
-                this.endButtonHold(amount, button);
+                endHold();
             });
             
-            button.addEventListener('touchcancel', (e) => {
-                e.preventDefault();
-                const amount = parseInt(button.dataset.amount);
-                this.cancelButtonHold(amount, button);
+            button.addEventListener('touchcancel', () => {
+                clearTimeout(holdTimeout);
+                button.classList.remove('hold-active');
+                isLongPress = false;
             });
         });
     }
-    
-    // ПРОСТЫЕ функции для обработки кнопок
-    startButtonHold(amount, button) {
-        console.log('Начало нажатия кнопки:', amount);
-        this.isHolding = true;
-        this.holdStartTime = Date.now();
-        this.holdAmount = amount;
-        
-        // Визуальная обратная связь
-        button.classList.add('hold-active');
-        
-        // Вибрация
-        if (navigator.vibrate) navigator.vibrate(30);
-    }
-    
-    endButtonHold(amount, button) {
-        console.log('Конец нажатия кнопки:', amount);
-        button.classList.remove('hold-active');
-        
-        if (!this.isHolding) return;
-        
-        const holdDuration = Date.now() - this.holdStartTime;
-        console.log('Длительность нажатия:', holdDuration);
-        
-        if (holdDuration > 500) {
-            // Зажатие - удаление
-            console.log('Зажатие - удаление');
-            this.removeWater(amount);
-        } else {
-            // Короткое нажатие - добавление
-            console.log('Короткое нажатие - добавление');
-            this.addWater(amount);
-        }
-        
-        this.isHolding = false;
-    }
-    
-    cancelButtonHold(amount, button) {
-        console.log('Отмена нажатия кнопки:', amount);
-        button.classList.remove('hold-active');
-        
-        if (!this.isHolding) return;
-        
-        // Если отменили - считаем коротким нажатием (добавление)
-        this.addWater(amount);
-        this.isHolding = false;
-    }
-
-    addCustomWater() {
-        const input = document.getElementById('customAmount');
-        const amount = parseInt(input.value);
-        
-        if (amount && amount > 0 && amount <= 5000) {
-            this.addWater(amount);
-            input.value = '';
-            input.blur();
-        } else if (amount > 5000) {
-            this.showNotification('Максимум 5000 мл за раз', 'success');
-        } else {
-            this.showNotification('Введите количество от 1 до 5000 мл', 'success');
-        }
-    }
-
-    removeCustomWater() {
-        const input = document.getElementById('customAmount');
-        const amount = parseInt(input.value);
-        
-        if (amount && amount > 0 && amount <= 5000) {
-            this.removeWater(amount);
-            input.value = '';
-            input.blur();
-        } else if (amount > 5000) {
-            this.showNotification('Максимум 5000 мл за раз', 'success');
-        } else {
-            this.showNotification('Введите количество от 1 до 5000 мл', 'success');
-        }
-    }
-}
-
-// Глобальные функции
-function updateTarget() {
-    if (window.waterTracker) {
-        window.waterTracker.updateTarget();
-    }
-}
-
-function addCustomWater() {
-    if (window.waterTracker) window.waterTracker.addCustomWater();
-}
-
-function removeCustomWater() {
-    if (window.waterTracker) window.waterTracker.removeCustomWater();
-}
-
-function resetWater() {
-    if (window.waterTracker) window.waterTracker.resetWater();
 }
 
 // Запрещаем контекстное меню на кнопках
