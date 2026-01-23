@@ -326,4 +326,74 @@ window.HealthFlow = {
 // Инициализация приложения при загрузке
 document.addEventListener('DOMContentLoaded', () => {
     window.HealthFlow.init();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // Добавьте этот код в конец app.js (перед последней строку)
+    
+    // Загрузка модуля воды при переходе на страницу
+    async function loadWaterPage() {
+        try {
+            // Динамически импортируем модуль воды
+            const waterModule = await import('./water.js');
+            
+            // Инициализируем модуль
+            const waterTracker = await waterModule.init(window.HealthFlow);
+            
+            // Сохраняем ссылку на трекер воды
+            window.HealthFlow.waterTracker = waterTracker;
+            
+            console.log('Модуль воды загружен');
+        } catch (error) {
+            console.error('Ошибка загрузки модуля воды:', error);
+            
+            // Показываем заглушку если модуль не загрузился
+            const container = document.getElementById('waterPage');
+            if (container) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px;">
+                        <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;">💧</div>
+                        <h2 style="font-size: 1.5rem; margin-bottom: 10px; color: var(--text-primary);">
+                            Модуль воды
+                        </h2>
+                        <p style="color: var(--text-secondary); margin-bottom: 30px;">
+                            Ошибка загрузки модуля. Пожалуйста, обновите страницу.
+                        </p>
+                        <button onclick="location.reload()" style="background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: var(--radius); font-weight: 600; cursor: pointer;">
+                            Обновить страницу
+                        </button>
+                    </div>
+                `;
+                container.classList.add('active');
+            }
+        }
+    }
+    
+    // Обновите метод loadPageContent в классе HealthFlow:
+    // В методе loadPageContent добавьте после строки с await this.loadPageModule(pageId):
+    
+    if (pageId === 'water') {
+        await loadWaterPage();
+    }
 });
+
