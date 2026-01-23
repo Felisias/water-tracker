@@ -6,7 +6,7 @@
     <title>🌿 AquaFlow</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em% font-size=%2290%22 fill=%22%2306B48F%22>🌿</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 fill=%22%2306B48F%22>🌿</text></svg>">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="theme-color" content="#F5F1E6">
@@ -58,34 +58,34 @@
         <!-- Быстрые действия -->
         <section class="quick-actions">
             <h2 class="section-title">Быстрые действия</h2>
-            <div class="quick-tip">Нажмите для добавления • Зажмите для удаления</div>
+            <div class="quick-tip">Нажмите для добавления • Зажмите (1.5 сек) для удаления</div>
             <div class="action-buttons">
                 <button class="action-btn" data-amount="250" 
-                        ontouchstart="handleButtonPress(event, 250)" 
-                        onmousedown="handleButtonPress(event, 250)"
-                        ontouchend="handleButtonRelease(event, 250)"
-                        onmouseup="handleButtonRelease(event, 250)"
-                        onmouseleave="handleButtonRelease(event, 250)">
+                        ontouchstart="startButtonPress(event, 250)" 
+                        ontouchend="endButtonPress(event, 250)"
+                        onmousedown="startButtonPress(event, 250)" 
+                        onmouseup="endButtonPress(event, 250)"
+                        onmouseleave="cancelButtonPress(event, 250)">
                     <span class="btn-emoji">🥛</span>
                     <span class="btn-text">250 мл</span>
-                    <span class="btn-hint">(+1✨)</span>
+                    <span class="btn-hint">+1✨</span>
                 </button>
                 <button class="action-btn" data-amount="500"
-                        ontouchstart="handleButtonPress(event, 500)" 
-                        onmousedown="handleButtonPress(event, 500)"
-                        ontouchend="handleButtonRelease(event, 500)"
-                        onmouseup="handleButtonRelease(event, 500)"
-                        onmouseleave="handleButtonRelease(event, 500)">
+                        ontouchstart="startButtonPress(event, 500)" 
+                        ontouchend="endButtonPress(event, 500)"
+                        onmousedown="startButtonPress(event, 500)" 
+                        onmouseup="endButtonPress(event, 500)"
+                        onmouseleave="cancelButtonPress(event, 500)">
                     <span class="btn-emoji">💧</span>
                     <span class="btn-text">500 мл</span>
-                    <span class="btn-hint">(+2✨)</span>
+                    <span class="btn-hint">+2✨</span>
                 </button>
                 <button class="action-btn" data-amount="100"
-                        ontouchstart="handleButtonPress(event, 100)" 
-                        onmousedown="handleButtonPress(event, 100)"
-                        ontouchend="handleButtonRelease(event, 100)"
-                        onmouseup="handleButtonRelease(event, 100)"
-                        onmouseleave="handleButtonRelease(event, 100)">
+                        ontouchstart="startButtonPress(event, 100)" 
+                        ontouchend="endButtonPress(event, 100)"
+                        onmousedown="startButtonPress(event, 100)" 
+                        onmouseup="endButtonPress(event, 100)"
+                        onmouseleave="cancelButtonPress(event, 100)">
                     <span class="btn-emoji">⚡</span>
                     <span class="btn-text">100 мл</span>
                 </button>
@@ -164,9 +164,14 @@
 
     <!-- Индикатор зажатия -->
     <div class="hold-indicator" id="holdIndicator">
-        <div class="hold-icon">−</div>
-        <div class="hold-text">Удаление...</div>
-        <div class="hold-amount" id="holdAmount">0 мл</div>
+        <div class="hold-progress">
+            <div class="hold-progress-fill" id="holdProgressFill"></div>
+        </div>
+        <div class="hold-content">
+            <div class="hold-icon">−</div>
+            <div class="hold-text">Удерживайте для удаления</div>
+            <div class="hold-amount" id="holdAmount">250 мл</div>
+        </div>
     </div>
 
     <script src="app.js"></script>
