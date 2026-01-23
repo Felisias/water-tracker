@@ -9,6 +9,9 @@ class WaterTracker {
         this.isAnimating = false;
         this.skinCounter = 0;
         
+        // Данные для графика
+        this.hourlyData = this.initHourlyData();
+        
         // Переменные для зажатия кнопок
         this.holdTimer = null;
         this.holdAmount = 0;
@@ -21,12 +24,30 @@ class WaterTracker {
         this.loadData();
         this.setupEventListeners();
         this.updateDisplay();
+        this.updateChart();
         this.startClock();
         
         // Автообновление расчетов скинтов
         document.getElementById('customAmount').addEventListener('input', (e) => {
             this.updateSkinCalculation(e.target.value);
         });
+        
+        // Автосохранение цели
+        document.getElementById('targetInput').addEventListener('change', () => {
+            this.updateTarget();
+        });
+    }
+
+    initHourlyData() {
+        const data = [];
+        for (let i = 0; i < 24; i++) {
+            data.push({
+                hour: i,
+                amount: 0,
+                projected: 0
+            });
+        }
+        return data;
     }
 
     loadData() {
@@ -41,6 +62,7 @@ class WaterTracker {
                 this.history = data.history || [];
                 this.skinCounter = data.skinCounter || (this.waterAmount % 250);
                 this.todaySkins = Math.floor(this.waterAmount / 250);
+                this.hourlyData = data.hourlyData || this.initHourlyData();
             }
         }
         
@@ -59,6 +81,7 @@ class WaterTracker {
         const savedTarget = localStorage.getItem('waterTarget');
         if (savedTarget) {
             this.targetAmount = parseInt(savedTarget);
+            document.getElementById('targetInput').value = this.targetAmount;
         }
     }
 
@@ -69,7 +92,8 @@ class WaterTracker {
             date: today,
             amount: this.waterAmount,
             history: this.history,
-            skinCounter: this.skinCounter
+            skinCounter: this.skinCounter,
+            hourlyData: this.hourlyData
         };
         localStorage.setItem('waterData', JSON.stringify(waterData));
         
@@ -90,13 +114,18 @@ class WaterTracker {
         this.isAnimating = true;
         const oldWaterAmount = this.waterAmount;
         
-        const time = new Date().toLocaleTimeString([], { 
+        const time = new Date();
+        const hour = time.getHours();
+        const timeString = time.toLocaleTimeString([], { 
             hour: '2-digit', 
             minute: '2-digit' 
         });
         
         // Добавляем воду
         this.waterAmount += amount;
+        
+        // Обновляем данные для графика
+        this.hourlyData[hour].amount += amount;
         
         // Обработка скинтов
         const skinsEarned = this.calculateSkins(amount, true);
@@ -109,7 +138,7 @@ class WaterTracker {
         // Добавляем в историю
         this.history.unshift({
             amount,
-            time,
+            time: timeString,
             skins: skinsEarned,
             timestamp: Date.now(),
             type: 'add'
@@ -122,6 +151,7 @@ class WaterTracker {
         this.saveData();
         this.animateBottleChange(oldWaterAmount, this.waterAmount, true);
         this.updateDisplay();
+        this.updateChart();
         
         // Уведомление
         let message = `+${amount} мл добавлено`;
@@ -156,13 +186,18 @@ class WaterTracker {
             return;
         }
         
-        const time = new Date().toLocaleTimeString([], { 
+        const time = new Date();
+        const hour = time.getHours();
+        const timeString = time.toLocaleTimeString([], { 
             hour: '2-digit', 
             minute: '2-digit' 
         });
         
         // Удаляем воду
         this.waterAmount -= actualRemove;
+        
+        // Обновляем данные для графика
+        this.hourlyData[hour].amount = Math.max(0, this.hourlyData[hour].amount - actualRemove);
         
         // Обработка скинтов (отнимаем если нужно)
         const skinsLost = this.calculateSkins(actualRemove, false);
@@ -175,7 +210,7 @@ class WaterTracker {
         // Добавляем в историю
         this.history.unshift({
             amount: actualRemove,
-            time,
+            time: timeString,
             skins: skinsLost,
             timestamp: Date.now(),
             type: 'remove'
@@ -188,6 +223,7 @@ class WaterTracker {
         this.saveData();
         this.animateBottleChange(oldWaterAmount, this.waterAmount, false);
         this.updateDisplay();
+        this.updateChart();
         
         this.showNotification(`−${actualRemove} мл удалено`, 'remove');
         this.playSound(false);
@@ -316,29 +352,129 @@ class WaterTracker {
         
         bottle.appendChild(ripple);
         
-        // Добавляем стиль для анимации
-        if (!document.getElementById('bottle-ripple-style')) {
-            const style = document.createElement('style');
-            style.id = 'bottle-ripple-style';
-            style.textContent = `
-                @keyframes bottleRipple {
-                    0% {
-                        transform: translate(-50%, -50%) scale(0);
-                        opacity: 1;
-                    }
-                    100% {
-                        transform: translate(-50%, -50%) scale(1.5);
-                        opacity: 0;
-                    }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-        
         setTimeout(() => ripple.remove(), 800);
     }
 
-    // Функции для зажатия кнопок - ПРОСТАЯ ЛОГИКА
+    updateTarget() {
+        const input = document.getElementById('targetInput');
+        const newTarget = parseInt(input.value);
+        
+        if (newTarget && newTarget >= 500 && newTarget <= 5000) {
+            this.targetAmount = newTarget;
+            this.saveData();
+            this.updateDisplay();
+            this.updateChart();
+            this.showNotification(`Цель обновлена: ${newTarget} мл`, 'success');
+        } else {
+            this.showNotification('Цель должна быть от 500 до 5000 мл', 'success');
+            input.value = this.targetAmount;
+        }
+    }
+
+    updateChart() {
+        const chartElement = document.getElementById('waterChart');
+        const now = new Date();
+        const currentHour = now.getHours();
+        
+        // Очищаем график
+        chartElement.innerHTML = '';
+        
+        // Если нет данных, показываем сообщение
+        if (this.waterAmount === 0) {
+            chartElement.innerHTML = `
+                <div class="chart-empty">
+                    <div class="chart-empty-icon">📊</div>
+                    <div class="chart-empty-text">Данные появятся здесь</div>
+                    <div class="chart-empty-subtext">После добавления воды</div>
+                </div>
+            `;
+            return;
+        }
+        
+        // Рассчитываем прогноз
+        this.calculateProjection();
+        
+        // Находим максимальное значение для масштабирования
+        let maxValue = this.targetAmount;
+        for (let i = 0; i <= currentHour; i++) {
+            maxValue = Math.max(maxValue, this.hourlyData[i].amount, this.hourlyData[i].projected);
+        }
+        
+        // Создаем оси
+        const axisY = document.createElement('div');
+        axisY.className = 'chart-axis chart-axis-y';
+        
+        // Добавляем значения на ось Y
+        const yValues = [0, Math.round(maxValue/2), maxValue];
+        yValues.forEach(value => {
+            const yLabel = document.createElement('div');
+            yLabel.textContent = value + ' мл';
+            axisY.appendChild(yLabel);
+        });
+        
+        const axisX = document.createElement('div');
+        axisX.className = 'chart-axis chart-axis-x';
+        
+        // Добавляем столбцы и метки на ось X
+        for (let i = 0; i < 24; i++) {
+            const hourData = this.hourlyData[i];
+            
+            // Создаем столбец для реальных данных
+            if (hourData.amount > 0 || hourData.projected > 0) {
+                const bar = document.createElement('div');
+                bar.className = `chart-bar ${i > currentHour ? 'chart-bar-projected' : ''}`;
+                
+                // Высота столбца в зависимости от максимального значения
+                const barHeight = (Math.max(hourData.amount, hourData.projected) / maxValue) * 100;
+                bar.style.height = `${barHeight}%`;
+                bar.style.left = `${(i / 24) * 100}%`;
+                bar.style.transform = `translateX(-50%)`;
+                
+                // Подсказка при наведении
+                const label = document.createElement('div');
+                label.className = 'chart-bar-label';
+                let labelText = `${i}:00 - ${i+1}:00`;
+                if (hourData.amount > 0) {
+                    labelText += `\nВыпито: ${hourData.amount} мл`;
+                }
+                if (hourData.projected > 0 && i > currentHour) {
+                    labelText += `\nПрогноз: ${Math.round(hourData.projected)} мл`;
+                }
+                label.textContent = labelText;
+                bar.appendChild(label);
+                
+                chartElement.appendChild(bar);
+            }
+            
+            // Добавляем метку на ось X каждые 3 часа
+            if (i % 3 === 0) {
+                const xLabel = document.createElement('div');
+                xLabel.textContent = `${i}:00`;
+                axisX.appendChild(xLabel);
+            }
+        }
+        
+        chartElement.appendChild(axisY);
+        chartElement.appendChild(axisX);
+    }
+
+    calculateProjection() {
+        const now = new Date();
+        const currentHour = now.getHours();
+        const remainingHours = 24 - currentHour - 1;
+        
+        if (remainingHours <= 0 || this.waterAmount >= this.targetAmount) return;
+        
+        const remainingAmount = this.targetAmount - this.waterAmount;
+        const amountPerHour = remainingAmount / remainingHours;
+        
+        // Заполняем прогноз для оставшихся часов
+        for (let i = currentHour + 1; i < 24; i++) {
+            this.hourlyData[i].projected = amountPerHour;
+        }
+    }
+
+    // Функции для зажатия кнопок
     startHold(amount) {
         if (this.isHolding) return;
         
@@ -394,8 +530,10 @@ class WaterTracker {
             this.skinCounter = 0;
             this.todaySkins = 0;
             this.history = [];
+            this.hourlyData = this.initHourlyData();
             this.saveData();
             this.updateDisplay();
+            this.updateChart();
             this.showNotification('День сброшен! Начните заново 🌱', 'success');
         }
     }
@@ -405,7 +543,6 @@ class WaterTracker {
         
         // Обновление основных элементов
         document.getElementById('currentAmount').textContent = this.waterAmount;
-        document.getElementById('targetAmount').textContent = `${this.targetAmount} мл`;
         document.getElementById('progressPercentage').textContent = `${percentage}%`;
         document.getElementById('skinCount').textContent = this.totalSkins;
         document.getElementById('todaySkins').textContent = this.todaySkins;
@@ -509,8 +646,10 @@ class WaterTracker {
     }
 
     startClock() {
+        // Обновляем каждую минуту
         setInterval(() => {
             this.updateStats();
+            this.updateChart();
         }, 60000);
     }
 
@@ -588,11 +727,6 @@ function startButtonPress(event, amount) {
     // Начинаем зажатие
     if (window.waterTracker) {
         window.waterTracker.startHold(amount);
-        
-        // Устанавливаем таймер: если зажали больше 500ms - это удаление
-        holdTimer = setTimeout(() => {
-            // Ничего не делаем здесь, просто ждем отпускания
-        }, 100); // Небольшая задержка чтобы избежать ложных срабатываний
     }
     
     return false;
@@ -602,14 +736,12 @@ function startButtonPress(event, amount) {
 function endButtonPress(event, amount) {
     event.preventDefault();
     
-    // Очищаем таймер
-    clearTimeout(holdTimer);
-    
     // Если это не та же кнопка - игнорируем
     if (event.currentTarget !== activeButton) return;
     
     // Проверяем время нажатия
-    const holdTime = event.timeStamp - event.currentTarget.dataset.pressTime;
+    const pressTime = parseInt(event.currentTarget.dataset.pressTime || '0');
+    const holdTime = Date.now() - pressTime;
     
     // Если было зажатие - удаляем, иначе добавляем
     if (window.waterTracker) {
@@ -628,9 +760,6 @@ function endButtonPress(event, amount) {
 function cancelButtonPress(event, amount) {
     event.preventDefault();
     
-    // Очищаем таймер
-    clearTimeout(holdTimer);
-    
     // Если мышь ушла с активной кнопки - отменяем
     if (activeButton === event.currentTarget) {
         if (window.waterTracker) {
@@ -646,13 +775,13 @@ function cancelButtonPress(event, amount) {
 // Сохраняем время нажатия
 document.addEventListener('mousedown', function(e) {
     if (e.target.closest('.action-btn')) {
-        e.target.closest('.action-btn').dataset.pressTime = e.timeStamp;
+        e.target.closest('.action-btn').dataset.pressTime = Date.now();
     }
 });
 
 document.addEventListener('touchstart', function(e) {
     if (e.target.closest('.action-btn')) {
-        e.target.closest('.action-btn').dataset.pressTime = e.timeStamp;
+        e.target.closest('.action-btn').dataset.pressTime = Date.now();
     }
 });
 
@@ -662,6 +791,13 @@ document.addEventListener('contextmenu', function(e) {
         e.preventDefault();
     }
 });
+
+// Глобальная функция для обновления цели
+function updateTarget() {
+    if (window.waterTracker) {
+        window.waterTracker.updateTarget();
+    }
+}
 
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', () => {
