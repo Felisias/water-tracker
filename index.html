@@ -1,63 +1,138 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Трекер воды 💧</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🌊 AquaFlow</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌊</text></svg>">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💧</text></svg>">
+    <meta name="theme-color" content="#0a1128">
 </head>
 <body>
-    <div class="container">
-        <h1>💧 Трекер воды</h1>
-        
-        <div class="stats">
-            <div class="stat-box">
-                <div id="currentAmount">0</div>
-                <div class="label">Выпито сегодня</div>
-            </div>
-            <div class="stat-box">
-                <div id="targetAmount">2000</div>
-                <div class="label">Цель (мл)</div>
-            </div>
-            <div class="stat-box">
-                <div id="percentage">0%</div>
-                <div class="label">Прогресс</div>
-            </div>
-        </div>
-
-        <div class="progress-container">
-            <div id="progressBar" class="progress-bar"></div>
-        </div>
-
-        <div class="buttons">
-            <button onclick="addWater(250)">+250 мл (стакан)</button>
-            <button onclick="addWater(500)">+500 мл (бутылка)</button>
-            <button onclick="addWater(100)">+100 мл (глоток)</button>
-            <button onclick="resetWater()" class="reset">Сбросить день</button>
-        </div>
-
-        <div class="custom-add">
-            <input type="number" id="customAmount" placeholder="Другое количество" min="0">
-            <button onclick="addCustomWater()">Добавить</button>
-        </div>
-
-        <div class="target-settings">
-            <label for="targetInput">Цель на день (мл):</label>
-            <input type="number" id="targetInput" value="2000" min="500">
-            <button onclick="updateTarget()">Обновить</button>
-        </div>
-
-        <div class="history">
-            <h3>История сегодня:</h3>
-            <ul id="historyList"></ul>
-        </div>
+    <!-- Анимированный фон -->
+    <div class="water-background">
+        <div class="wave wave-1"></div>
+        <div class="wave wave-2"></div>
+        <div class="wave wave-3"></div>
+        <div class="particles"></div>
     </div>
+
+    <main class="container">
+        <!-- Верхняя панель -->
+        <header class="header">
+            <div class="date-display" id="currentDate">Загрузка...</div>
+            <button class="theme-toggle" id="themeToggle" aria-label="Сменить тему">
+                <div class="theme-icon"></div>
+            </button>
+        </header>
+
+        <!-- Основной прогресс -->
+        <section class="main-progress">
+            <div class="water-circle">
+                <div class="circle-bg"></div>
+                <div class="circle-fill" id="waterFill"></div>
+                <div class="circle-content">
+                    <div class="current-amount" id="currentAmount">0</div>
+                    <div class="amount-unit">мл</div>
+                    <div class="progress-text" id="progressPercentage">0%</div>
+                </div>
+            </div>
+            
+            <div class="target-display">
+                <div class="target-label">Цель дня</div>
+                <div class="target-amount" id="targetAmount">2000 мл</div>
+            </div>
+        </section>
+
+        <!-- Быстрые действия -->
+        <section class="quick-actions">
+            <h2 class="section-title">Быстрое добавление</h2>
+            <div class="action-buttons">
+                <button class="action-btn" data-amount="250" onclick="addWater(250)">
+                    <span class="btn-emoji">🥛</span>
+                    <span class="btn-text">Стакан</span>
+                    <span class="btn-amount">250 мл</span>
+                </button>
+                <button class="action-btn" data-amount="500" onclick="addWater(500)">
+                    <span class="btn-emoji">💧</span>
+                    <span class="btn-text">Бутылка</span>
+                    <span class="btn-amount">500 мл</span>
+                </button>
+                <button class="action-btn" data-amount="100" onclick="addWater(100)">
+                    <span class="btn-emoji">⚡</span>
+                    <span class="btn-text">Глоток</span>
+                    <span class="btn-amount">100 мл</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Кастомный ввод -->
+        <section class="custom-input-section">
+            <div class="input-group">
+                <input 
+                    type="number" 
+                    id="customAmount" 
+                    placeholder="Введите количество в мл" 
+                    min="0" 
+                    max="5000"
+                    class="custom-input"
+                >
+                <button class="add-btn" onclick="addCustomWater()">
+                    <span class="add-icon">+</span>
+                    Добавить
+                </button>
+            </div>
+        </section>
+
+        <!-- Статистика -->
+        <section class="stats-section">
+            <h2 class="section-title">Сегодня</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">⏱️</div>
+                    <div class="stat-value" id="timeRemaining">--:--</div>
+                    <div class="stat-label">До цели</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-value" id="avgPerHour">0 мл/ч</div>
+                    <div class="stat-label">Средний темп</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎯</div>
+                    <div class="stat-value" id="completionTime">--:--</div>
+                    <div class="stat-label">Прогноз завершения</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- История -->
+        <section class="history-section">
+            <div class="history-header">
+                <h2 class="section-title">История</h2>
+                <button class="clear-btn" onclick="resetWater()" id="resetBtn">
+                    <span class="clear-icon">↻</span>
+                    Сбросить
+                </button>
+            </div>
+            <div class="history-list" id="historyList">
+                <!-- История загрузится через JS -->
+                <div class="empty-history">Пока что история пуста. Выпейте первый стакан воды!</div>
+            </div>
+        </section>
+
+        <!-- Уведомления -->
+        <div class="notification" id="notification"></div>
+    </main>
+
+    <!-- Floating Action Button -->
+    <button class="fab" onclick="showQuickAdd()" id="fabBtn">
+        <span class="fab-icon">+</span>
+    </button>
 
     <script src="app.js"></script>
 </body>
-
 </html>
