@@ -32,42 +32,27 @@
             </div>
         </header>
 
-        <!-- Основной прогресс - БУТЫЛКА -->
-        <section class="main-progress">
-            <div class="bottle-container">
-                <div class="bottle">
-                    <!-- Фон бутылки -->
-                    <div class="bottle-bg"></div>
-                    <!-- Вода в бутылке -->
-                    <div class="bottle-fill" id="bottleFill"></div>
-                    <!-- Границы бутылки -->
-                    <div class="bottle-border"></div>
-                    <!-- Содержимое бутылки -->
-                    <div class="bottle-content">
-                        <div class="current-amount" id="currentAmount">0</div>
-                        <div class="amount-unit">мл</div>
-                        <div class="progress-text" id="progressPercentage">0%</div>
-                    </div>
-                </div>
+        <!-- БУТЫЛКА крупная -->
+        <section class="bottle-section">
+            <div class="target-display">
+                <span class="target-label">Цель:</span>
+                <span class="target-amount" id="targetAmountDisplay">2000 мл</span>
             </div>
             
-            <!-- Настройка цели -->
-            <div class="target-settings">
-                <div class="target-label">Цель дня:</div>
-                <div class="target-input-group">
-                    <input 
-                        type="number" 
-                        id="targetInput" 
-                        value="2000" 
-                        min="500" 
-                        max="5000" 
-                        step="100"
-                        class="target-input"
-                    >
-                    <span class="target-unit">мл</span>
-                    <button class="target-save-btn" onclick="updateTarget()">
-                        <span class="target-icon">✓</span>
-                    </button>
+            <div class="bottle-container-large">
+                <div class="bottle-large">
+                    <!-- Фон бутылки -->
+                    <div class="bottle-bg-large"></div>
+                    <!-- Вода в бутылке -->
+                    <div class="bottle-fill-large" id="bottleFill"></div>
+                    <!-- Границы бутылки -->
+                    <div class="bottle-border-large"></div>
+                    <!-- Содержимое бутылки -->
+                    <div class="bottle-content-large">
+                        <div class="current-amount-large" id="currentAmount">0</div>
+                        <div class="amount-unit-large">мл</div>
+                        <div class="progress-text-large" id="progressPercentage">0%</div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -75,32 +60,17 @@
         <!-- Кнопки действий -->
         <section class="quick-actions">
             <div class="action-buttons">
-                <button class="action-btn" data-amount="250" 
-                        ontouchstart="startButtonPress(event, 250)" 
-                        ontouchend="endButtonPress(event, 250)"
-                        onmousedown="startButtonPress(event, 250)" 
-                        onmouseup="endButtonPress(event, 250)"
-                        onmouseleave="cancelButtonPress(event, 250)">
+                <button class="action-btn" data-amount="250">
                     <span class="btn-emoji">🥛</span>
                     <span class="btn-text">250 мл</span>
                     <span class="btn-hint">+1✨</span>
                 </button>
-                <button class="action-btn" data-amount="500"
-                        ontouchstart="startButtonPress(event, 500)" 
-                        ontouchend="endButtonPress(event, 500)"
-                        onmousedown="startButtonPress(event, 500)" 
-                        onmouseup="endButtonPress(event, 500)"
-                        onmouseleave="cancelButtonPress(event, 500)">
+                <button class="action-btn" data-amount="500">
                     <span class="btn-emoji">💧</span>
                     <span class="btn-text">500 мл</span>
                     <span class="btn-hint">+2✨</span>
                 </button>
-                <button class="action-btn" data-amount="100"
-                        ontouchstart="startButtonPress(event, 100)" 
-                        ontouchend="endButtonPress(event, 100)"
-                        onmousedown="startButtonPress(event, 100)" 
-                        onmouseup="endButtonPress(event, 100)"
-                        onmouseleave="cancelButtonPress(event, 100)">
+                <button class="action-btn" data-amount="100">
                     <span class="btn-emoji">⚡</span>
                     <span class="btn-text">100 мл</span>
                 </button>
@@ -119,11 +89,11 @@
                     class="custom-input"
                 >
                 <div class="custom-buttons">
-                    <button class="custom-btn add" onclick="addCustomWater()">
+                    <button class="custom-btn add">
                         <span class="btn-icon">+</span>
                         Добавить
                     </button>
-                    <button class="custom-btn remove" onclick="removeCustomWater()">
+                    <button class="custom-btn remove">
                         <span class="btn-icon">−</span>
                         Удалить
                     </button>
@@ -131,6 +101,25 @@
             </div>
             <div class="skin-calculation" id="skinCalculation">
                 При добавлении: <span id="calculatedSkins">0</span> ✨
+            </div>
+        </section>
+
+        <!-- График-волна -->
+        <section class="chart-section">
+            <h2 class="section-title">Прогресс по часам</h2>
+            <div class="chart-container">
+                <div class="wave-chart" id="waveChart">
+                    <!-- График-волна будет отрисован через JS -->
+                    <div class="chart-empty">
+                        <div class="chart-empty-icon">📊</div>
+                        <div class="chart-empty-text">Данные появятся здесь</div>
+                        <div class="chart-empty-subtext">После добавления воды</div>
+                    </div>
+                </div>
+                <div class="chart-info">
+                    <div class="chart-time-now" id="currentTime">Сейчас: 00:00</div>
+                    <div class="chart-total" id="chartTotal">Всего: 0 мл</div>
+                </div>
             </div>
         </section>
 
@@ -150,32 +139,7 @@
                 <div class="stat-card skin-card">
                     <div class="stat-icon">✨</div>
                     <div class="stat-value" id="todaySkins">0</div>
-                    <div class="stat-label">Скинты сегодня</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- График -->
-        <section class="chart-section">
-            <h2 class="section-title">Прогресс за день</h2>
-            <div class="chart-container">
-                <div class="chart" id="waterChart">
-                    <!-- График будет отрисован через JS -->
-                    <div class="chart-empty">
-                        <div class="chart-empty-icon">📊</div>
-                        <div class="chart-empty-text">Данные появятся здесь</div>
-                        <div class="chart-empty-subtext">После добавления воды</div>
-                    </div>
-                </div>
-                <div class="chart-legend">
-                    <div class="legend-item">
-                        <span class="legend-color" style="background: var(--primary)"></span>
-                        <span class="legend-text">Выпито</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-color" style="background: var(--accent)"></span>
-                        <span class="legend-text">Прогноз</span>
-                    </div>
+                    <div class="stat-label">Скинты</div>
                 </div>
             </div>
         </section>
@@ -184,7 +148,7 @@
         <section class="history-section">
             <div class="history-header">
                 <h2 class="section-title">История</h2>
-                <button class="clear-btn" onclick="resetWater()" id="resetBtn">
+                <button class="clear-btn" id="resetBtn">
                     <span class="clear-icon">↻</span>
                     Сбросить день
                 </button>
@@ -194,6 +158,35 @@
                     <div class="empty-icon">💧</div>
                     <div class="empty-text">Начните отслеживать воду!</div>
                     <div class="empty-subtext">Каждые 250 мл = 1 скинт ✨</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Настройка цели -->
+        <section class="target-settings-section">
+            <h2 class="section-title">Настройка цели</h2>
+            <div class="target-settings">
+                <div class="target-input-group">
+                    <input 
+                        type="number" 
+                        id="targetInput" 
+                        value="2000" 
+                        min="500" 
+                        max="5000" 
+                        step="100"
+                        class="target-input"
+                    >
+                    <span class="target-unit">мл</span>
+                    <button class="target-save-btn" id="saveTargetBtn">
+                        <span class="target-icon">✓</span>
+                        Сохранить
+                    </button>
+                </div>
+                <div class="target-presets">
+                    <button class="target-preset" data-target="1500">1500 мл</button>
+                    <button class="target-preset" data-target="2000">2000 мл</button>
+                    <button class="target-preset" data-target="2500">2500 мл</button>
+                    <button class="target-preset" data-target="3000">3000 мл</button>
                 </div>
             </div>
         </section>
