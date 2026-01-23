@@ -172,7 +172,7 @@ body {
     box-shadow: 0 4px 12px rgba(255, 154, 118, 0.3);
 }
 
-/* Круг с водой */
+/* БУТЫЛКА */
 .main-progress {
     display: flex;
     flex-direction: column;
@@ -181,56 +181,47 @@ body {
     animation: fadeIn 0.8s ease-out 0.2s both;
 }
 
-.water-circle {
-    width: 260px;
-    height: 260px;
+.bottle-container {
+    width: 180px;
+    height: 320px;
     position: relative;
     margin-bottom: 24px;
 }
 
-.circle-ring {
+.bottle {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.bottle-bg {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    border-radius: 50%;
-    border: 8px solid rgba(255, 255, 255, 0.9);
-    box-shadow: 
-        inset 0 0 0 1px rgba(6, 180, 143, 0.2),
-        0 10px 30px rgba(6, 180, 143, 0.15);
-    z-index: 3;
-    pointer-events: none;
-}
-
-.circle-bg {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    width: calc(100% - 16px);
-    height: calc(100% - 16px);
-    border-radius: 50%;
     background: linear-gradient(135deg, #F8F9FA 0%, #FFFFFF 100%);
-    z-index: 1;
+    border-radius: 80px 80px 40px 40px;
     box-shadow: 
-        inset 0 4px 20px rgba(0, 0, 0, 0.05);
+        inset 0 4px 20px rgba(0, 0, 0, 0.05),
+        var(--shadow-light);
+    overflow: hidden;
 }
 
-.circle-fill {
+.bottle-fill {
     position: absolute;
-    bottom: 8px;
-    left: 8px;
-    width: calc(100% - 16px);
+    bottom: 20px;
+    left: 20px;
+    width: calc(100% - 40px);
     height: 0%;
-    border-radius: 50%;
     background: linear-gradient(to top, var(--primary-light), var(--primary));
-    z-index: 2;
+    border-radius: 60px 60px 20px 20px;
+    z-index: 1;
     transition: height 1s cubic-bezier(0.34, 1.56, 0.64, 1);
     overflow: hidden;
-    clip-path: circle(50% at 50% 100%);
 }
 
-.circle-fill::before {
+.bottle-fill::before {
     content: '';
     position: absolute;
     top: -20%;
@@ -246,7 +237,22 @@ body {
     50% { transform: translateY(-10px) scale(1.02); opacity: 0.5; }
 }
 
-.circle-content {
+.bottle-border {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 3px solid var(--border-light);
+    border-radius: 80px 80px 40px 40px;
+    box-shadow: 
+        inset 0 0 0 1px rgba(6, 180, 143, 0.1),
+        0 10px 30px rgba(6, 180, 143, 0.15);
+    z-index: 2;
+    pointer-events: none;
+}
+
+.bottle-content {
     position: absolute;
     top: 0;
     left: 0;
@@ -256,11 +262,12 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    z-index: 4;
+    z-index: 3;
+    pointer-events: none;
 }
 
 .current-amount {
-    font-size: 3.2rem;
+    font-size: 3rem;
     font-weight: 800;
     color: var(--primary-dark);
     line-height: 1;
@@ -366,16 +373,21 @@ body {
     transform: translateY(0);
 }
 
-.action-btn.removing {
+.action-btn.hold-active {
     background: linear-gradient(135deg, rgba(255, 107, 107, 0.1), rgba(231, 76, 60, 0.05));
     border-color: var(--remove);
     color: var(--remove);
     box-shadow: var(--shadow-remove);
 }
 
-.action-btn.removing .btn-emoji {
+.action-btn.hold-active .btn-emoji {
     transform: scale(0.9);
     opacity: 0.8;
+}
+
+.action-btn.hold-active .btn-text,
+.action-btn.hold-active .btn-hint {
+    color: var(--remove);
 }
 
 .btn-emoji {
@@ -732,58 +744,6 @@ body {
     content: '✨ ';
 }
 
-/* Индикатор зажатия */
-.hold-indicator {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0);
-    background: var(--surface);
-    border: 2px solid var(--remove);
-    border-radius: var(--radius);
-    padding: 24px 32px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    box-shadow: 0 20px 40px rgba(255, 107, 107, 0.3);
-    z-index: 1001;
-    opacity: 0;
-    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    pointer-events: none;
-}
-
-.hold-indicator.show {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-}
-
-.hold-icon {
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, var(--remove), #E74C3C);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 2rem;
-    font-weight: 800;
-    box-shadow: 0 10px 20px rgba(255, 107, 107, 0.4);
-}
-
-.hold-text {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--remove);
-}
-
-.hold-amount {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--remove);
-}
-
 /* Анимации */
 @keyframes slideDown {
     from {
@@ -829,24 +789,19 @@ body {
     }
 }
 
-@keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-}
-
 /* Адаптивность */
 @media (max-width: 500px) {
     .container {
         padding: 16px;
     }
     
-    .water-circle {
-        width: 240px;
-        height: 240px;
+    .bottle-container {
+        width: 160px;
+        height: 280px;
     }
     
     .current-amount {
-        font-size: 2.8rem;
+        font-size: 2.5rem;
     }
     
     .action-buttons {
@@ -895,111 +850,4 @@ body {
         padding: 8px 14px;
         font-size: 0.95rem;
     }
-    /* Добавить в конец файла style.css */
-
-    /* Индикатор зажатия */
-    .hold-indicator {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) scale(0);
-        background: var(--surface);
-        border: 2px solid var(--remove);
-        border-radius: var(--radius);
-        padding: 30px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 20px;
-        box-shadow: 0 20px 40px rgba(255, 107, 107, 0.3);
-        z-index: 1001;
-        opacity: 0;
-        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        pointer-events: none;
-        width: 280px;
-    }
-    
-    .hold-indicator.show {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-    }
-    
-    .hold-progress {
-        width: 100%;
-        height: 8px;
-        background: rgba(255, 107, 107, 0.2);
-        border-radius: 4px;
-        overflow: hidden;
-    }
-    
-    .hold-progress-fill {
-        width: 0%;
-        height: 100%;
-        background: linear-gradient(90deg, var(--remove), #E74C3C);
-        border-radius: 4px;
-        transition: width 1.5s linear;
-    }
-    
-    .hold-content {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 12px;
-    }
-    
-    .hold-icon {
-        width: 50px;
-        height: 50px;
-        background: linear-gradient(135deg, var(--remove), #E74C3C);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1.8rem;
-        font-weight: 800;
-        box-shadow: 0 8px 16px rgba(255, 107, 107, 0.4);
-    }
-    
-    .hold-text {
-        font-size: 1rem;
-        font-weight: 700;
-        color: var(--remove);
-        text-align: center;
-    }
-    
-    .hold-amount {
-        font-size: 1.3rem;
-        font-weight: 800;
-        color: var(--remove);
-    }
-    
-    /* Кнопка в режиме удаления */
-    .action-btn.hold-active {
-        background: linear-gradient(135deg, rgba(255, 107, 107, 0.1), rgba(231, 76, 60, 0.05));
-        border-color: var(--remove);
-        transform: scale(0.95);
-    }
-    
-    .action-btn.hold-active .btn-emoji {
-        transform: scale(0.9);
-        opacity: 0.8;
-    }
-    
-    .action-btn.hold-active .btn-text,
-    .action-btn.hold-active .btn-hint {
-        color: var(--remove);
-    }
-        /* Добавить если нет в style.css */
-    @keyframes rippleExpand {
-        0% {
-            transform: translate(-50%, -50%) scale(0);
-            opacity: 1;
-        }
-        100% {
-            transform: translate(-50%, -50%) scale(1.1);
-            opacity: 0;
-        }
 }
-}
-
