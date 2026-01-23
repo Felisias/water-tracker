@@ -14,7 +14,9 @@
 <body>
     <!-- Главный контейнер -->
     <div class="app-container" id="appContainer">
-        <!-- Будет заполняться JavaScript -->
+        <div class="page active" id="currentPage">
+            <!-- Контент будет загружен через main.js -->
+        </div>
     </div>
 
     <!-- Нижняя навигация -->
@@ -36,6 +38,7 @@
     <!-- Всплывающее уведомление -->
     <div class="notification" id="notification"></div>
 
-    <script src="app.js"></script>
+    <!-- Скрипты -->
+    <script type="module" src="./main.js"></script>
 </body>
 </html>
