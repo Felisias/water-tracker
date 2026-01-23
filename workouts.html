@@ -1,3 +1,89 @@
+<!-- workouts.html -->
 <div class="page" id="workoutsPage">
-    <!-- Контент загрузится через app.js -->
+    <!-- Контент будет загружен через app.js -->
 </div>
+
+<!-- Шаблон для тренировок -->
+<template id="workoutsTemplate">
+    <header class="page-header">
+        <h1 class="page-title">Тренировки</h1>
+        <div class="page-controls">
+            <div class="skin-counter">
+                ✨ <span id="workoutSkinCount">0</span>
+            </div>
+            <button class="theme-toggle" id="workoutThemeToggle">
+                <div class="theme-icon">🌙</div>
+            </button>
+        </div>
+    </header>
+    
+    <div class="content-container">
+        <!-- Табы навигации -->
+        <div class="workout-tabs" id="workoutTabs">
+            <button class="tab-btn active" data-tab="exercises">
+                <span class="tab-icon">💪</span>
+                <span class="tab-label">Упражнения</span>
+            </button>
+            <button class="tab-btn" data-tab="workouts">
+                <span class="tab-icon">🏋️</span>
+                <span class="tab-label">Тренировки</span>
+            </button>
+            <button class="tab-btn" data-tab="history">
+                <span class="tab-icon">📊</span>
+                <span class="tab-label">История</span>
+            </button>
+            <button class="tab-btn" data-tab="new">
+                <span class="tab-icon">➕</span>
+                <span class="tab-label">Новая</span>
+            </button>
+        </div>
+        
+        <!-- Контейнер для контента табов -->
+        <div class="tab-content" id="tabContent">
+            <!-- Будет заполняться JavaScript -->
+        </div>
+    </div>
+    
+    <!-- Модальное окно для добавления упражнения -->
+    <div class="modal" id="addExerciseModal">
+        <div class="modal-content">
+            <h2>Добавить упражнение</h2>
+            <form id="exerciseForm">
+                <div class="form-group">
+                    <label for="exerciseName">Название</label>
+                    <input type="text" id="exerciseName" required>
+                </div>
+                <div class="form-group">
+                    <label for="exerciseCategory">Категория</label>
+                    <select id="exerciseCategory" required>
+                        <option value="Грудь">Грудь 🏋️</option>
+                        <option value="Спина">Спина 💪</option>
+                        <option value="Ноги">Ноги 🦵</option>
+                        <option value="Плечи">Плечи 👕</option>
+                        <option value="Руки">Руки 💪</option>
+                        <option value="Пресс">Пресс 🩲</option>
+                        <option value="Кардио">Кардио 🏃</option>
+                        <option value="Растяжка">Растяжка 🧘</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="exerciseEmoji">Эмодзи</label>
+                    <input type="text" id="exerciseEmoji" placeholder="🏋️" maxlength="2">
+                </div>
+                <div class="form-group">
+                    <label for="exerciseDescription">Описание</label>
+                    <textarea id="exerciseDescription" rows="3"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" data-close-modal>Отмена</button>
+                    <button type="submit" class="btn-primary">Добавить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</template>
+
+<!-- Стили для модуля тренировок -->
+<style>
+/* Стили будем добавлять в style.css или здесь */
+</style>
