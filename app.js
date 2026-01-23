@@ -11,7 +11,6 @@ class WaterTracker {
         
         // Переменные для зажатия кнопок
         this.holdTimer = null;
-        this.holdStartTime = 0;
         this.holdAmount = 0;
         this.isHolding = false;
         
@@ -121,7 +120,7 @@ class WaterTracker {
         }
         
         this.saveData();
-        this.animateWaterChange(oldWaterAmount, this.waterAmount, true);
+        this.animateBottleChange(oldWaterAmount, this.waterAmount, true);
         this.updateDisplay();
         
         // Уведомление
@@ -187,7 +186,7 @@ class WaterTracker {
         }
         
         this.saveData();
-        this.animateWaterChange(oldWaterAmount, this.waterAmount, false);
+        this.animateBottleChange(oldWaterAmount, this.waterAmount, false);
         this.updateDisplay();
         
         this.showNotification(`−${actualRemove} мл удалено`, 'remove');
@@ -239,8 +238,9 @@ class WaterTracker {
             const spark = document.createElement('div');
             spark.className = `spark ${isNegative ? 'negative' : ''}`;
             
+            // Создаем искры вокруг бутылки
             const x = 100 + Math.random() * 200;
-            const y = window.innerHeight - 200 + Math.random() * 100;
+            const y = window.innerHeight / 2 - 50 + Math.random() * 100;
             
             spark.style.left = `${x}px`;
             spark.style.top = `${y}px`;
@@ -254,8 +254,8 @@ class WaterTracker {
         }
     }
 
-    animateWaterChange(oldAmount, newAmount, isAdding) {
-        const fillElement = document.getElementById('waterFill');
+    animateBottleChange(oldAmount, newAmount, isAdding) {
+        const fillElement = document.getElementById('bottleFill');
         const oldPercent = Math.min(oldAmount / this.targetAmount * 100, 100);
         const newPercent = Math.min(newAmount / this.targetAmount * 100, 100);
         
@@ -266,98 +266,120 @@ class WaterTracker {
         
         setTimeout(() => {
             fillElement.style.height = `${newPercent}%`;
+            
+            // Анимация числа
+            this.animateNumberChange('currentAmount', oldAmount, newAmount);
         }, 50);
     }
 
+    animateNumberChange(elementId, oldValue, newValue) {
+        const element = document.getElementById(elementId);
+        const duration = 800;
+        const startTime = Date.now();
+        const difference = newValue - oldValue;
+        
+        const animate = () => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            // Кубическая easing функция
+            const easeProgress = 1 - Math.pow(1 - progress, 3);
+            const currentValue = Math.round(oldValue + difference * easeProgress);
+            
+            element.textContent = currentValue;
+            
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            }
+        };
+        
+        animate();
+    }
+
     createRippleEffect(isAdding) {
-        const circle = document.querySelector('.water-circle');
+        const bottle = document.querySelector('.bottle');
         const ripple = document.createElement('div');
         
         ripple.style.cssText = `
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 100%;
-            height: 100%;
-            border: 3px solid ${isAdding ? 'rgba(6, 180, 143, 0.3)' : 'rgba(255, 107, 107, 0.3)'};
-            border-radius: 50%;
+            width: calc(100% - 40px);
+            height: 20px;
+            background: ${isAdding ? 'rgba(6, 180, 143, 0.3)' : 'rgba(255, 107, 107, 0.3)'};
+            border-radius: 10px;
             transform: translate(-50%, -50%) scale(0);
-            animation: rippleExpand 0.8s ease-out;
+            animation: bottleRipple 0.8s ease-out;
             pointer-events: none;
             z-index: 2;
         `;
         
-        circle.appendChild(ripple);
+        bottle.appendChild(ripple);
+        
+        // Добавляем стиль для анимации
+        if (!document.getElementById('bottle-ripple-style')) {
+            const style = document.createElement('style');
+            style.id = 'bottle-ripple-style';
+            style.textContent = `
+                @keyframes bottleRipple {
+                    0% {
+                        transform: translate(-50%, -50%) scale(0);
+                        opacity: 1;
+                    }
+                    100% {
+                        transform: translate(-50%, -50%) scale(1.5);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
         setTimeout(() => ripple.remove(), 800);
     }
 
-    // Функции для зажатия кнопок
+    // Функции для зажатия кнопок - ПРОСТАЯ ЛОГИКА
     startHold(amount) {
         if (this.isHolding) return;
         
         this.isHolding = true;
         this.holdAmount = amount;
-        this.holdStartTime = Date.now();
         
-        // Показываем индикатор
-        const indicator = document.getElementById('holdIndicator');
-        document.getElementById('holdAmount').textContent = `${amount} мл`;
-        document.getElementById('holdProgressFill').style.width = '0%';
-        indicator.classList.add('show');
-        
-        // Добавляем класс на кнопку
+        // Добавляем класс на кнопку (визуальная обратная связь)
         const buttons = document.querySelectorAll(`[data-amount="${amount}"]`);
         buttons.forEach(btn => btn.classList.add('hold-active'));
         
-        // Запускаем прогресс бар
-        setTimeout(() => {
-            document.getElementById('holdProgressFill').style.width = '100%';
-        }, 10);
-        
         // Вибрация (если поддерживается)
         if (navigator.vibrate) {
-            navigator.vibrate(100);
+            navigator.vibrate(50);
         }
     }
 
     endHold() {
         if (!this.isHolding) return;
         
-        const holdDuration = Date.now() - this.holdStartTime;
-        this.isHolding = false;
-        
-        // Скрываем индикатор
-        const indicator = document.getElementById('holdIndicator');
-        indicator.classList.remove('show');
-        
         // Убираем класс с кнопки
         const buttons = document.querySelectorAll('.action-btn.hold-active');
         buttons.forEach(btn => btn.classList.remove('hold-active'));
         
-        // Если удерживали больше 1.5 секунд - удаляем
-        if (holdDuration >= 1500) {
-            this.removeWater(this.holdAmount);
-        } else {
-            // Если меньше 1.5 секунд - добавляем
-            this.addWater(this.holdAmount);
-        }
+        // Удаляем воду (так как это было зажатие)
+        this.removeWater(this.holdAmount);
         
+        this.isHolding = false;
         this.holdAmount = 0;
     }
 
     cancelHold() {
         if (!this.isHolding) return;
         
-        this.isHolding = false;
-        
-        // Скрываем индикатор
-        const indicator = document.getElementById('holdIndicator');
-        indicator.classList.remove('show');
-        
         // Убираем класс с кнопки
         const buttons = document.querySelectorAll('.action-btn.hold-active');
         buttons.forEach(btn => btn.classList.remove('hold-active'));
         
+        // Добавляем воду (так как это было короткое нажатие)
+        this.addWater(this.holdAmount);
+        
+        this.isHolding = false;
         this.holdAmount = 0;
     }
 
@@ -554,6 +576,7 @@ class WaterTracker {
 
 // Глобальные переменные для обработки кнопок
 let activeButton = null;
+let holdTimer = null;
 
 // Функция начала нажатия
 function startButtonPress(event, amount) {
@@ -565,6 +588,11 @@ function startButtonPress(event, amount) {
     // Начинаем зажатие
     if (window.waterTracker) {
         window.waterTracker.startHold(amount);
+        
+        // Устанавливаем таймер: если зажали больше 500ms - это удаление
+        holdTimer = setTimeout(() => {
+            // Ничего не делаем здесь, просто ждем отпускания
+        }, 100); // Небольшая задержка чтобы избежать ложных срабатываний
     }
     
     return false;
@@ -574,25 +602,39 @@ function startButtonPress(event, amount) {
 function endButtonPress(event, amount) {
     event.preventDefault();
     
+    // Очищаем таймер
+    clearTimeout(holdTimer);
+    
     // Если это не та же кнопка - игнорируем
     if (event.currentTarget !== activeButton) return;
     
-    // Завершаем зажатие
+    // Проверяем время нажатия
+    const holdTime = event.timeStamp - event.currentTarget.dataset.pressTime;
+    
+    // Если было зажатие - удаляем, иначе добавляем
     if (window.waterTracker) {
-        window.waterTracker.endHold();
+        if (holdTime > 500) { // Больше 500ms = удаление
+            window.waterTracker.endHold();
+        } else { // Меньше 500ms = добавление
+            window.waterTracker.cancelHold();
+        }
     }
     
     activeButton = null;
     return false;
 }
 
-// Функция отмены нажатия (когда палец/мышь ушла с кнопки)
+// Функция отмены нажатия
 function cancelButtonPress(event, amount) {
     event.preventDefault();
+    
+    // Очищаем таймер
+    clearTimeout(holdTimer);
     
     // Если мышь ушла с активной кнопки - отменяем
     if (activeButton === event.currentTarget) {
         if (window.waterTracker) {
+            // Если ушли с кнопки - считаем это коротким нажатием (добавление)
             window.waterTracker.cancelHold();
         }
         activeButton = null;
@@ -600,6 +642,19 @@ function cancelButtonPress(event, amount) {
     
     return false;
 }
+
+// Сохраняем время нажатия
+document.addEventListener('mousedown', function(e) {
+    if (e.target.closest('.action-btn')) {
+        e.target.closest('.action-btn').dataset.pressTime = e.timeStamp;
+    }
+});
+
+document.addEventListener('touchstart', function(e) {
+    if (e.target.closest('.action-btn')) {
+        e.target.closest('.action-btn').dataset.pressTime = e.timeStamp;
+    }
+});
 
 // Запрещаем контекстное меню на кнопках
 document.addEventListener('contextmenu', function(e) {
