@@ -329,7 +329,39 @@ class WorkoutManager {
         
         return streak;
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // В конце файла workouts.js добавь:
+    
+    // Функция для инициализации UI
+    export async function initWorkoutsUI() {
+        try {
+            // Импортируем UI только когда нужно
+            const { workoutsUI } = await import('./workouts-ui.js');
+            await workoutsUI.init();
+            return workoutsUI;
+        } catch (error) {
+            console.error('Ошибка инициализации UI тренировок:', error);
+            throw error;
+        }
+    }
+    
+    // Добавь эту функцию в workoutManager
+    workoutManager.initWorkoutsUI = initWorkoutsUI;
 }
 
 // Экспортируем синглтон
 export const workoutManager = new WorkoutManager();
+
