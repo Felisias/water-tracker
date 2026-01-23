@@ -1,22 +1,55 @@
 {
-  "name": "Трекер воды 💧",
-  "short_name": "WaterTracker",
-  "description": "Приложение для отслеживания выпитой воды",
+  "name": "AquaFlow 🌊",
+  "short_name": "AquaFlow",
+  "description": "Умный трекер воды с минималистичным дизайном",
   "start_url": "/water-tracker/",
   "display": "standalone",
-  "background_color": "#e3f2fd",
-  "theme_color": "#0288d1",
+  "display_override": ["window-controls-overlay"],
+  "background_color": "#0a1128",
+  "theme_color": "#00d4ff",
   "orientation": "portrait",
+  "categories": ["health", "lifestyle", "productivity"],
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 fill=%22%230288d1%22>💧</text></svg>",
+      "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 fill=%22%2300d4ff%22>🌊</text></svg>",
       "sizes": "any",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     },
     {
-      "src": "https://cdn.jsdelivr.net/npm/twemoji@latest/assets/svg/1f4a7.svg",
+      "src": "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/1f4a7.svg",
       "sizes": "192x192",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/1f4a7.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Добавить стакан",
+      "short_name": "Стакан",
+      "description": "Добавить 250 мл воды",
+      "url": "/water-tracker/?add=250",
+      "icons": [
+        {
+          "src": "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/1f964.svg",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1080&fit=crop",
+      "sizes": "1080x1920",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Главный экран AquaFlow"
     }
   ]
 }
