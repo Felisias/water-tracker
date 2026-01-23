@@ -32,20 +32,22 @@
             </div>
         </header>
 
-        <!-- Основной прогресс -->
+        <!-- Основной прогресс - БУТЫЛКА -->
         <section class="main-progress">
-            <div class="water-circle">
-                <!-- Внешнее кольцо (полупрозрачное) -->
-                <div class="circle-ring"></div>
-                <!-- Фон круга -->
-                <div class="circle-bg"></div>
-                <!-- Вода (заполняется снизу) -->
-                <div class="circle-fill" id="waterFill"></div>
-                <!-- Содержимое -->
-                <div class="circle-content">
-                    <div class="current-amount" id="currentAmount">0</div>
-                    <div class="amount-unit">мл</div>
-                    <div class="progress-text" id="progressPercentage">0%</div>
+            <div class="bottle-container">
+                <div class="bottle">
+                    <!-- Фон бутылки -->
+                    <div class="bottle-bg"></div>
+                    <!-- Вода в бутылке -->
+                    <div class="bottle-fill" id="bottleFill"></div>
+                    <!-- Границы бутылки -->
+                    <div class="bottle-border"></div>
+                    <!-- Содержимое бутылки -->
+                    <div class="bottle-content">
+                        <div class="current-amount" id="currentAmount">0</div>
+                        <div class="amount-unit">мл</div>
+                        <div class="progress-text" id="progressPercentage">0%</div>
+                    </div>
                 </div>
             </div>
             
@@ -58,7 +60,7 @@
         <!-- Быстрые действия -->
         <section class="quick-actions">
             <h2 class="section-title">Быстрые действия</h2>
-            <div class="quick-tip">Нажмите для добавления • Зажмите (1.5 сек) для удаления</div>
+            <div class="quick-tip">Нажмите для добавления • Зажмите для удаления</div>
             <div class="action-buttons">
                 <button class="action-btn" data-amount="250" 
                         ontouchstart="startButtonPress(event, 250)" 
@@ -161,18 +163,6 @@
 
     <!-- Уведомление -->
     <div class="notification" id="notification"></div>
-
-    <!-- Индикатор зажатия -->
-    <div class="hold-indicator" id="holdIndicator">
-        <div class="hold-progress">
-            <div class="hold-progress-fill" id="holdProgressFill"></div>
-        </div>
-        <div class="hold-content">
-            <div class="hold-icon">−</div>
-            <div class="hold-text">Удерживайте для удаления</div>
-            <div class="hold-amount" id="holdAmount">250 мл</div>
-        </div>
-    </div>
 
     <script src="app.js"></script>
 </body>
