@@ -223,24 +223,24 @@ class HealthFlowApp {
         });
     }
     
+        // В app.js расширяем addSkins:
     addSkins(amount, source = 'unknown') {
         const oldSkins = this.state.totalSkins;
         this.state.totalSkins += amount;
         
-        console.log(`✨ +${amount} скинтов (${source}). Всего: ${this.state.totalSkins}`);
+        // Уведомление для тренировок
+        const workoutMessages = {
+            'workout_complete': '🏋️ Тренировка завершена!',
+            'new_record': '🏆 Новый рекорд!',
+            'streak': '🔥 Серия тренировок!'
+        };
         
-        // Сохраняем
-        this.saveState();
-        
-        // Обновляем отображение
-        this.updateSkinDisplay();
-        
-        // Показываем уведомление если добавили скинты
-        if (amount > 0) {
-            this.showNotification(`+${amount} скинтов ✨`, 'skins');
+        if (workoutMessages[source]) {
+            this.showNotification(`${workoutMessages[source]} +${amount}✨`, 'skins');
         }
         
-        return this.state.totalSkins;
+        this.saveState();
+        this.updateSkinDisplay();
     }
     
     updateSkinDisplay() {
@@ -295,3 +295,4 @@ window.healthFlow = new HealthFlowApp();
 document.addEventListener('DOMContentLoaded', () => {
     window.healthFlow.init();
 });
+
