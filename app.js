@@ -85,9 +85,10 @@ class HealthFlowApp {
         const container = document.getElementById('currentPage');
         
         try {
-            // Для модуля воды загружаем отдельно
             if (pageId === 'water') {
                 await this.loadWaterPage(container);
+            } else if (pageId === 'workouts') {
+                await this.loadWorkoutsPage(container);
             } else {
                 // Для других страниц показываем заглушки
                 container.innerHTML = this.getPageStub(pageId);
@@ -110,6 +111,18 @@ class HealthFlowApp {
         await this.loadWaterModule();
     }
     
+    async loadWorkoutsPage(container) {
+        // Загружаем HTML модуля тренировок
+        const response = await fetch('workouts.html');
+        const html = await response.text();
+        
+        // Вставляем HTML
+        container.innerHTML = html;
+        
+        // Загружаем и инициализируем JS модуля тренировок
+        await this.loadWorkoutsModule();
+    }
+    
     async loadWaterModule() {
         try {
             // Загружаем модуль воды
@@ -124,127 +137,60 @@ class HealthFlowApp {
             console.error('❌ Ошибка загрузки модуля воды:', error);
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-    // В app.js добавляем загрузку модуля тренировок:
-    
-    async loadPageContent(pageId) {
-        const container = document.getElementById('currentPage');
-        
-        try {
-            if (pageId === 'water') {
-                await this.loadWaterPage(container);
-            } else if (pageId === 'workouts') {
-                await this.loadWorkoutsPage(container);
-            } else {
-                container.innerHTML = this.getPageStub(pageId);
-            }
-        } catch (error) {
-            console.error(`❌ Ошибка загрузки страницы ${pageId}:`, error);
-            container.innerHTML = `<div class="error-message">Ошибка загрузки страницы</div>`;
-        }
-    }
-    
-    async loadWorkoutsPage(container) {
-        // Загружаем HTML
-        const response = await fetch('workouts.html');
-        const html = await response.text();
-        container.innerHTML = html;
-        
-        // Загружаем и инициализируем модуль тренировок
-        await this.loadWorkoutsModule();
-    }
     
     async loadWorkoutsModule() {
         try {
-            // Загружаем зависимости
-            const { db } = await import('./db.js');
-            const ExerciseManager = (await import('./exercises.js')).default;
-            const utils = await import('./utils.js');
+            // Загружаем модуль тренировок
+            const module = await import('./workouts.js');
             
-            // Инициализируем менеджер упражнений
-            const exerciseManager = new ExerciseManager(db);
-            await db.init();
-            await exerciseManager.init();
-            await exerciseManager.seedDefaultExercises();
-            
-            // Создаем и экспортируем глобально
-            window.WorkoutManager = {
-                exercises: exerciseManager,
-                utils: utils,
-                db: db
-            };
-            
-            console.log('✅ Модуль тренировок загружен');
-            
-            // Инициализируем интерфейс
-            this.initWorkoutUI();
-            
+            // Инициализируем модуль тренировок
+            if (module && module.workoutManager) {
+                await module.workoutManager.init();
+                
+                // Инициализируем UI для тренировок
+                await this.initWorkoutsUI();
+                
+                console.log('✅ Модуль тренировок загружен');
+            }
         } catch (error) {
             console.error('❌ Ошибка загрузки модуля тренировок:', error);
         }
     }
     
-    initWorkoutUI() {
-        // Инициализация табов, модальных окон и т.д.
-        // Это временная заглушка - основную логику напишем в workouts.js
-        console.log('Инициализация интерфейса тренировок...');
+    async initWorkoutsUI() {
+        // Здесь будет инициализация UI для тренировок
+        // Для начала просто покажем, что модуль загружен
+        const skinCount = document.getElementById('workoutsSkinCount');
+        if (skinCount) {
+            skinCount.textContent = this.state.totalSkins;
+        }
+        
+        // Добавляем обработчик для кнопки темы
+        const themeToggle = document.getElementById('workoutsThemeToggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                this.toggleTheme();
+            });
+        }
+        
+        // Показываем заглушку, пока не реализован полноценный UI
+        const workoutsList = document.getElementById('workoutsList');
+        if (workoutsList) {
+            workoutsList.innerHTML = `
+                <div class="empty-workouts">
+                    <div class="empty-icon">🏋️</div>
+                    <div class="empty-text">Модуль тренировок загружен!</div>
+                    <div class="empty-subtext">Полный функционал скоро появится</div>
+                    <button class="btn-primary" onclick="window.healthFlow.showNotification('Функционал в разработке!', 'success')">
+                        Попробовать демо
+                    </button>
+                </div>
+            `;
+        }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
     
     getPageStub(pageId) {
         const stubs = {
-            workouts: `
-                <header class="page-header">
-                    <h1 class="page-title">Тренировки</h1>
-                    <div class="page-controls">
-                        <div class="skin-counter">
-                            ✨ <span>${this.state.totalSkins}</span>
-                        </div>
-                        <button class="theme-toggle" onclick="window.healthFlow.toggleTheme()">
-                            <div class="theme-icon">${this.state.theme === 'cozy' ? '🌙' : '☀️'}</div>
-                        </button>
-                    </div>
-                </header>
-                <div class="content-container">
-                    <div style="text-align: center; padding: 60px 20px;">
-                        <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;">🏋️</div>
-                        <h2 style="font-size: 1.5rem; margin-bottom: 10px; color: var(--text-primary);">
-                            Модуль тренировок
-                        </h2>
-                        <p style="color: var(--text-secondary); line-height: 1.5;">
-                            Скоро здесь появится система тренировок!
-                        </p>
-                    </div>
-                </div>
-            `,
             profile: `
                 <header class="page-header">
                     <h1 class="page-title">Профиль</h1>
@@ -317,24 +263,24 @@ class HealthFlowApp {
         });
     }
     
-        // В app.js расширяем addSkins:
     addSkins(amount, source = 'unknown') {
         const oldSkins = this.state.totalSkins;
         this.state.totalSkins += amount;
         
-        // Уведомление для тренировок
-        const workoutMessages = {
-            'workout_complete': '🏋️ Тренировка завершена!',
-            'new_record': '🏆 Новый рекорд!',
-            'streak': '🔥 Серия тренировок!'
-        };
+        console.log(`✨ +${amount} скинтов (${source}). Всего: ${this.state.totalSkins}`);
         
-        if (workoutMessages[source]) {
-            this.showNotification(`${workoutMessages[source]} +${amount}✨`, 'skins');
+        // Сохраняем
+        this.saveState();
+        
+        // Обновляем отображение
+        this.updateSkinDisplay();
+        
+        // Показываем уведомление если добавили скинты
+        if (amount > 0) {
+            this.showNotification(`+${amount} скинтов ✨`, 'skins');
         }
         
-        this.saveState();
-        this.updateSkinDisplay();
+        return this.state.totalSkins;
     }
     
     updateSkinDisplay() {
@@ -383,11 +329,10 @@ class HealthFlowApp {
 }
 
 // Создаём и экспортируем экземпляр приложения
-window.healthFlow = new HealthFlowApp();
+window.HealthFlow = new HealthFlowApp();
+window.healthFlow = window.HealthFlow; // Алиас для обратной совместимости
 
 // Запускаем приложение при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
-    window.healthFlow.init();
+    window.HealthFlow.init();
 });
-
-
