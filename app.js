@@ -124,6 +124,100 @@ class HealthFlowApp {
             console.error('❌ Ошибка загрузки модуля воды:', error);
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+    // В app.js добавляем загрузку модуля тренировок:
+    
+    async loadPageContent(pageId) {
+        const container = document.getElementById('currentPage');
+        
+        try {
+            if (pageId === 'water') {
+                await this.loadWaterPage(container);
+            } else if (pageId === 'workouts') {
+                await this.loadWorkoutsPage(container);
+            } else {
+                container.innerHTML = this.getPageStub(pageId);
+            }
+        } catch (error) {
+            console.error(`❌ Ошибка загрузки страницы ${pageId}:`, error);
+            container.innerHTML = `<div class="error-message">Ошибка загрузки страницы</div>`;
+        }
+    }
+    
+    async loadWorkoutsPage(container) {
+        // Загружаем HTML
+        const response = await fetch('workouts.html');
+        const html = await response.text();
+        container.innerHTML = html;
+        
+        // Загружаем и инициализируем модуль тренировок
+        await this.loadWorkoutsModule();
+    }
+    
+    async loadWorkoutsModule() {
+        try {
+            // Загружаем зависимости
+            const { db } = await import('./db.js');
+            const ExerciseManager = (await import('./exercises.js')).default;
+            const utils = await import('./utils.js');
+            
+            // Инициализируем менеджер упражнений
+            const exerciseManager = new ExerciseManager(db);
+            await db.init();
+            await exerciseManager.init();
+            await exerciseManager.seedDefaultExercises();
+            
+            // Создаем и экспортируем глобально
+            window.WorkoutManager = {
+                exercises: exerciseManager,
+                utils: utils,
+                db: db
+            };
+            
+            console.log('✅ Модуль тренировок загружен');
+            
+            // Инициализируем интерфейс
+            this.initWorkoutUI();
+            
+        } catch (error) {
+            console.error('❌ Ошибка загрузки модуля тренировок:', error);
+        }
+    }
+    
+    initWorkoutUI() {
+        // Инициализация табов, модальных окон и т.д.
+        // Это временная заглушка - основную логику напишем в workouts.js
+        console.log('Инициализация интерфейса тренировок...');
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
     
     getPageStub(pageId) {
         const stubs = {
@@ -295,4 +389,5 @@ window.healthFlow = new HealthFlowApp();
 document.addEventListener('DOMContentLoaded', () => {
     window.healthFlow.init();
 });
+
 
