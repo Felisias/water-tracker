@@ -8,10 +8,12 @@ class WaterTracker {
         this.startTime = new Date();
         this.isAnimating = false;
         this.skinCounter = 0;
+        
+        // Переменные для зажатия кнопок
         this.holdTimer = null;
-        this.isHolding = false;
+        this.holdStartTime = 0;
         this.holdAmount = 0;
-        this.currentHoldAmount = 0;
+        this.isHolding = false;
         
         this.init();
     }
@@ -135,7 +137,7 @@ class WaterTracker {
         
         setTimeout(() => {
             this.isAnimating = false;
-        }, 1000);
+        }, 800);
     }
 
     removeWater(amount) {
@@ -193,7 +195,7 @@ class WaterTracker {
         
         setTimeout(() => {
             this.isAnimating = false;
-        }, 1000);
+        }, 800);
     }
 
     calculateSkins(amount, isAdding) {
@@ -213,11 +215,9 @@ class WaterTracker {
                 tempCounter -= fromCounter;
                 remaining -= fromCounter;
                 
-                // Если перешли через границу 250
                 if (tempCounter < 0) {
                     tempCounter += 250;
                     skinsLost++;
-                    remaining += 250;
                 }
             }
             
@@ -235,16 +235,16 @@ class WaterTracker {
     createSparks(count, isNegative) {
         const container = document.getElementById('sparksContainer');
         
-        for (let i = 0; i < count * 3; i++) {
+        for (let i = 0; i < count * 2; i++) {
             const spark = document.createElement('div');
             spark.className = `spark ${isNegative ? 'negative' : ''}`;
             
             const x = 100 + Math.random() * 200;
-            const y = window.innerHeight - 150 + Math.random() * 100;
+            const y = window.innerHeight - 200 + Math.random() * 100;
             
             spark.style.left = `${x}px`;
             spark.style.top = `${y}px`;
-            spark.style.animationDelay = `${Math.random() * 0.5}s`;
+            spark.style.animationDelay = `${Math.random() * 0.3}s`;
             
             container.appendChild(spark);
             
@@ -266,34 +266,7 @@ class WaterTracker {
         
         setTimeout(() => {
             fillElement.style.height = `${newPercent}%`;
-            
-            // Анимация текста
-            this.animateNumberChange('currentAmount', oldAmount, newAmount);
         }, 50);
-    }
-
-    animateNumberChange(elementId, oldValue, newValue) {
-        const element = document.getElementById(elementId);
-        const duration = 1000;
-        const startTime = Date.now();
-        const difference = newValue - oldValue;
-        
-        const animate = () => {
-            const elapsed = Date.now() - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            
-            // Кубическая easing функция
-            const easeProgress = 1 - Math.pow(1 - progress, 3);
-            const currentValue = Math.round(oldValue + difference * easeProgress);
-            
-            element.textContent = currentValue;
-            
-            if (progress < 1) {
-                requestAnimationFrame(animate);
-            }
-        };
-        
-        animate();
     }
 
     createRippleEffect(isAdding) {
@@ -306,56 +279,51 @@ class WaterTracker {
             left: 50%;
             width: 100%;
             height: 100%;
-            border: 3px solid ${isAdding ? 'rgba(6, 180, 143, 0.4)' : 'rgba(255, 107, 107, 0.4)'};
+            border: 3px solid ${isAdding ? 'rgba(6, 180, 143, 0.3)' : 'rgba(255, 107, 107, 0.3)'};
             border-radius: 50%;
             transform: translate(-50%, -50%) scale(0);
-            animation: rippleExpand 1s ease-out;
+            animation: rippleExpand 0.8s ease-out;
             pointer-events: none;
             z-index: 2;
         `;
         
         circle.appendChild(ripple);
-        setTimeout(() => ripple.remove(), 1000);
+        setTimeout(() => ripple.remove(), 800);
     }
 
+    // Функции для зажатия кнопок
     startHold(amount) {
         if (this.isHolding) return;
         
         this.isHolding = true;
         this.holdAmount = amount;
-        this.currentHoldAmount = 0;
+        this.holdStartTime = Date.now();
         
         // Показываем индикатор
         const indicator = document.getElementById('holdIndicator');
-        document.getElementById('holdAmount').textContent = `0 мл`;
+        document.getElementById('holdAmount').textContent = `${amount} мл`;
+        document.getElementById('holdProgressFill').style.width = '0%';
         indicator.classList.add('show');
         
         // Добавляем класс на кнопку
         const buttons = document.querySelectorAll(`[data-amount="${amount}"]`);
-        buttons.forEach(btn => btn.classList.add('removing'));
+        buttons.forEach(btn => btn.classList.add('hold-active'));
         
-        // Таймер для постепенного удаления
-        this.holdTimer = setInterval(() => {
-            if (this.waterAmount <= 0) {
-                this.stopHold();
-                return;
-            }
-            
-            this.currentHoldAmount += amount;
-            document.getElementById('holdAmount').textContent = `-${this.currentHoldAmount} мл`;
-            
-            // Вибрация (если поддерживается)
-            if (navigator.vibrate) {
-                navigator.vibrate(50);
-            }
-            
-        }, 300); // Удаляем каждые 300ms
+        // Запускаем прогресс бар
+        setTimeout(() => {
+            document.getElementById('holdProgressFill').style.width = '100%';
+        }, 10);
+        
+        // Вибрация (если поддерживается)
+        if (navigator.vibrate) {
+            navigator.vibrate(100);
+        }
     }
 
-    stopHold() {
+    endHold() {
         if (!this.isHolding) return;
         
-        clearInterval(this.holdTimer);
+        const holdDuration = Date.now() - this.holdStartTime;
         this.isHolding = false;
         
         // Скрываем индикатор
@@ -363,16 +331,34 @@ class WaterTracker {
         indicator.classList.remove('show');
         
         // Убираем класс с кнопки
-        const buttons = document.querySelectorAll('.action-btn.removing');
-        buttons.forEach(btn => btn.classList.remove('removing'));
+        const buttons = document.querySelectorAll('.action-btn.hold-active');
+        buttons.forEach(btn => btn.classList.remove('hold-active'));
         
-        // Если что-то удалили
-        if (this.currentHoldAmount > 0) {
-            this.removeWater(this.currentHoldAmount);
+        // Если удерживали больше 1.5 секунд - удаляем
+        if (holdDuration >= 1500) {
+            this.removeWater(this.holdAmount);
+        } else {
+            // Если меньше 1.5 секунд - добавляем
+            this.addWater(this.holdAmount);
         }
         
         this.holdAmount = 0;
-        this.currentHoldAmount = 0;
+    }
+
+    cancelHold() {
+        if (!this.isHolding) return;
+        
+        this.isHolding = false;
+        
+        // Скрываем индикатор
+        const indicator = document.getElementById('holdIndicator');
+        indicator.classList.remove('show');
+        
+        // Убираем класс с кнопки
+        const buttons = document.querySelectorAll('.action-btn.hold-active');
+        buttons.forEach(btn => btn.classList.remove('hold-active'));
+        
+        this.holdAmount = 0;
     }
 
     resetWater() {
@@ -487,7 +473,7 @@ class WaterTracker {
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
             
-            oscillator.frequency.value = isAdding ? 800 : 400;
+            oscillator.frequency.value = isAdding ? 600 : 300;
             oscillator.type = 'sine';
             
             gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
@@ -566,41 +552,53 @@ class WaterTracker {
     }
 }
 
-// Глобальные функции для обработки кнопок
-let isTouchDevice = 'ontouchstart' in window;
-let activeHoldButton = null;
+// Глобальные переменные для обработки кнопок
+let activeButton = null;
 
-function handleButtonPress(event, amount) {
+// Функция начала нажатия
+function startButtonPress(event, amount) {
     event.preventDefault();
     
-    // Для тач-устройств: долгое нажатие = удаление
-    // Для ПК: правая кнопка мыши = удаление
-    const isRemove = isTouchDevice ? 
-        (event.type === 'touchstart') : 
-        (event.button === 2 || event.ctrlKey);
+    // Запоминаем активную кнопку
+    activeButton = event.currentTarget;
     
-    if (isRemove) {
-        // Начинаем удаление при зажатии
-        if (window.waterTracker && !window.waterTracker.isHolding) {
-            window.waterTracker.startHold(amount);
-            activeHoldButton = event.currentTarget;
-        }
-    } else {
-        // Нормальное добавление при клике
-        if (window.waterTracker) {
-            window.waterTracker.addWater(amount);
-        }
+    // Начинаем зажатие
+    if (window.waterTracker) {
+        window.waterTracker.startHold(amount);
     }
+    
+    return false;
 }
 
-function handleButtonRelease(event, amount) {
+// Функция окончания нажатия
+function endButtonPress(event, amount) {
     event.preventDefault();
     
-    // Останавливаем удаление если оно активно
-    if (window.waterTracker && window.waterTracker.isHolding) {
-        window.waterTracker.stopHold();
-        activeHoldButton = null;
+    // Если это не та же кнопка - игнорируем
+    if (event.currentTarget !== activeButton) return;
+    
+    // Завершаем зажатие
+    if (window.waterTracker) {
+        window.waterTracker.endHold();
     }
+    
+    activeButton = null;
+    return false;
+}
+
+// Функция отмены нажатия (когда палец/мышь ушла с кнопки)
+function cancelButtonPress(event, amount) {
+    event.preventDefault();
+    
+    // Если мышь ушла с активной кнопки - отменяем
+    if (activeButton === event.currentTarget) {
+        if (window.waterTracker) {
+            window.waterTracker.cancelHold();
+        }
+        activeButton = null;
+    }
+    
+    return false;
 }
 
 // Запрещаем контекстное меню на кнопках
@@ -615,7 +613,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.waterTracker = new WaterTracker();
 });
 
-// Глобальные функции
+// Глобальные функции для кнопок
 function addCustomWater() {
     if (window.waterTracker) window.waterTracker.addCustomWater();
 }
