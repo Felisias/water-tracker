@@ -1,4 +1,6 @@
-const CACHE_NAME = 'healthflow-v1';
+[file name]: sw.js
+[file content begin]
+const CACHE_NAME = 'healthflow-v2'; // Увеличиваем версию кеша
 const urlsToCache = [
     '/healthflow/',
     '/healthflow/index.html',
@@ -8,6 +10,8 @@ const urlsToCache = [
     '/healthflow/style.css',
     '/healthflow/app.js',
     '/healthflow/water.js',
+    '/healthflow/workouts.js',
+    '/healthflow/exercises.js',
     '/healthflow/db.js',
     '/healthflow/manifest.json'
 ];
@@ -62,3 +66,4 @@ self.addEventListener('fetch', event => {
             })
     );
 });
+[file content end]
