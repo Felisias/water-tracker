@@ -241,4 +241,68 @@
             </div>
         </div>
     </div>
+
+
+
+
+
+
+
+
+
+
+    <!-- Добавь этот скрипт в конец workouts.html -->
+    <script>
+        // Автоматическая инициализация при загрузке шаблона
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('📄 Workouts template loaded');
+            
+            // Проверяем, есть ли необходимые элементы
+            const checkElements = ['workoutsList', 'exercisesList', 'categoryFilter'];
+            const missingElements = checkElements.filter(id => !document.getElementById(id));
+            
+            if (missingElements.length > 0) {
+                console.warn('Отсутствуют элементы:', missingElements);
+                
+                // Показываем debug информацию
+                const container = document.querySelector('.content-container');
+                if (container) {
+                    container.innerHTML = `
+                        <div style="padding: 40px; text-align: center;">
+                            <h2>Отладка модуля тренировок</h2>
+                            <p style="color: var(--text-secondary); margin: 20px 0;">
+                                Отсутствуют элементы: ${missingElements.join(', ')}
+                            </p>
+                            <button onclick="location.reload()" style="
+                                background: var(--primary);
+                                color: white;
+                                border: none;
+                                padding: 12px 24px;
+                                border-radius: 8px;
+                                cursor: pointer;
+                            ">
+                                Обновить страницу
+                            </button>
+                        </div>
+                    `;
+                }
+            } else {
+                console.log('✅ Все элементы на месте');
+                
+                // Если глобальные объекты уже есть, инициализируем UI
+                if (window.workoutsUI && typeof window.workoutsUI.init === 'function') {
+                    console.log('Инициализируем workoutsUI...');
+                    await window.workoutsUI.init();
+                } else if (window.WorkoutsUI && typeof window.WorkoutsUI.init === 'function') {
+                    console.log('Инициализируем WorkoutsUI...');
+                    await window.WorkoutsUI.init();
+                }
+            }
+        });
+    </script>
+
+
+
+    
 </template>
+
