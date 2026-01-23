@@ -37,5 +37,15 @@
     <div class="notification" id="notification"></div>
 
     <script src="app.js"></script>
+
+
+
+    <script>
+    // Для корректной работы кнопки удаления
+    window.healthFlow.deleteExercise = async function(id) {
+        await this.deleteExercise(id);
+    };
+    </script>
 </body>
 </html>
+
