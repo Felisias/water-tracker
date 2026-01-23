@@ -88,7 +88,12 @@ class HealthFlowApp {
             // Для модуля воды загружаем отдельно
             if (pageId === 'water') {
                 await this.loadWaterPage(container);
-            } else {
+            } 
+            // Для тренировок загружаем тренировки
+            else if (pageId === 'workouts') {
+                await this.loadWorkoutsPage(container);
+            } 
+            else {
                 // Для других страниц показываем заглушки
                 container.innerHTML = this.getPageStub(pageId);
             }
@@ -98,6 +103,220 @@ class HealthFlowApp {
         }
     }
     
+    // Добавить новую функцию для загрузки страницы тренировок
+    async loadWorkoutsPage(container) {
+        // Загружаем HTML тренировок
+        const response = await fetch('workouts.html');
+        const html = await response.text();
+        
+        // Вставляем HTML
+        container.innerHTML = html;
+        
+        // Инициализируем модуль тренировок
+        await this.initWorkoutsModule();
+    }
+    
+    // Добавить функцию инициализации тренировок
+    async initWorkoutsModule() {
+        console.log('🏋️ Инициализация модуля тренировок...');
+        
+        // Инициализируем базу данных
+        await this.initDatabase();
+        
+        // Настраиваем обработчики событий
+        this.setupWorkoutsEventListeners();
+        
+        // Загружаем упражнения
+        await this.loadExercises();
+        
+        console.log('✅ Модуль тренировок готов');
+    }
+    
+    // Добавить функцию инициализации базы данных
+    async initDatabase() {
+        try {
+            const { db } = await import('./db.js');
+            await db.init();
+            this.db = db;
+            console.log('✅ База данных инициализирована');
+        } catch (error) {
+            console.error('❌ Ошибка базы данных:', error);
+        }
+    }
+    
+    // Добавить функцию загрузки упражнений
+    async loadExercises() {
+        if (!this.db) return;
+        
+        try {
+            const exercises = await this.db.getAll('exercises');
+            this.renderExercises(exercises);
+        } catch (error) {
+            console.error('❌ Ошибка загрузки упражнений:', error);
+        }
+    }
+    
+    // Добавить функцию отрисовки упражнений
+    renderExercises(exercises) {
+        const exercisesList = document.getElementById('exercisesList');
+        if (!exercisesList) return;
+        
+        if (!exercises || exercises.length === 0) {
+            exercisesList.innerHTML = `
+                <div class="empty-exercises">
+                    <div class="empty-icon">🏋️</div>
+                    <div class="empty-text">Нет упражнений</div>
+                    <div class="empty-subtext">Создайте первое упражнение!</div>
+                </div>
+            `;
+            return;
+        }
+        
+        exercisesList.innerHTML = exercises.map(exercise => `
+            <div class="exercise-card" data-id="${exercise.id}">
+                <div class="exercise-info">
+                    <div class="exercise-name">${exercise.name}</div>
+                    <div class="exercise-category ${exercise.category}">${this.getCategoryName(exercise.category)}</div>
+                </div>
+                <div class="exercise-description">${exercise.description || 'Без описания'}</div>
+                <button class="exercise-delete" onclick="window.healthFlow.deleteExercise(${exercise.id})">×</button>
+            </div>
+        `).join('');
+    }
+    
+    // Добавить вспомогательную функцию для названий категорий
+    getCategoryName(category) {
+        const categories = {
+            'strength': 'Силовые',
+            'cardio': 'Кардио',
+            'flexibility': 'Растяжка',
+            'core': 'Пресс',
+            'upper': 'Верх тела',
+            'lower': 'Низ тела',
+            'full': 'Все тело'
+        };
+        return categories[category] || category;
+    }
+    
+    // Добавить функцию удаления упражнения
+    async deleteExercise(id) {
+        if (confirm('Удалить это упражнение?')) {
+            try {
+                await this.db.delete('exercises', id);
+                await this.loadExercises();
+                this.showNotification('Упражнение удалено', 'success');
+            } catch (error) {
+                console.error('❌ Ошибка удаления:', error);
+                this.showNotification('Ошибка удаления', 'error');
+            }
+        }
+    }
+    
+    // Добавить функцию настройки обработчиков для тренировок
+    setupWorkoutsEventListeners() {
+        // Кнопка создания упражнения
+        const createBtn = document.getElementById('createExerciseBtn');
+        if (createBtn) {
+            createBtn.addEventListener('click', () => this.showExerciseModal());
+        }
+        
+        // Закрытие модального окна
+        const modal = document.getElementById('exerciseModal');
+        const modalClose = document.getElementById('modalClose');
+        const cancelBtn = document.getElementById('cancelBtn');
+        
+        if (modalClose) modalClose.addEventListener('click', () => this.hideExerciseModal());
+        if (cancelBtn) cancelBtn.addEventListener('click', () => this.hideExerciseModal());
+        if (modal) modal.addEventListener('click', (e) => {
+            if (e.target === modal) this.hideExerciseModal();
+        });
+        
+        // Форма создания упражнения
+        const form = document.getElementById('exerciseForm');
+        if (form) {
+            form.addEventListener('submit', (e) => this.createExercise(e));
+        }
+        
+        // Кнопка темы
+        const themeToggle = document.getElementById('workoutsThemeToggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => this.toggleTheme());
+        }
+        
+        // Обновление счётчика скинтов
+        const skinCount = document.getElementById('skinCountWorkouts');
+        if (skinCount) {
+            skinCount.textContent = this.state.totalSkins;
+        }
+    }
+    
+    // Добавить функции для модального окна
+    showExerciseModal() {
+        const modal = document.getElementById('exerciseModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            document.getElementById('exerciseName').focus();
+        }
+    }
+    
+    hideExerciseModal() {
+        const modal = document.getElementById('exerciseModal');
+        const form = document.getElementById('exerciseForm');
+        if (modal) modal.style.display = 'none';
+        if (form) form.reset();
+    }
+    
+    // Добавить функцию создания упражнения
+    async createExercise(e) {
+        e.preventDefault();
+        
+        if (!this.db) {
+            this.showNotification('База данных не загружена', 'error');
+            return;
+        }
+        
+        const name = document.getElementById('exerciseName').value.trim();
+        const category = document.getElementById('exerciseCategory').value;
+        const description = document.getElementById('exerciseDescription').value.trim();
+        
+        if (!name) {
+            this.showNotification('Введите название упражнения', 'error');
+            return;
+        }
+        
+        if (!category) {
+            this.showNotification('Выберите категорию', 'error');
+            return;
+        }
+        
+        try {
+            const exercise = {
+                name,
+                category,
+                description,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            
+            await this.db.add('exercises', exercise);
+            
+            this.showNotification(`Упражнение "${name}" создано!`, 'success');
+            this.hideExerciseModal();
+            await this.loadExercises();
+            
+            // Добавляем скинты за создание упражнения
+            this.addSkins(5, 'exercise_created');
+            
+        } catch (error) {
+            console.error('❌ Ошибка создания упражнения:', error);
+            if (error.name === 'ConstraintError') {
+                this.showNotification('Упражнение с таким названием уже существует', 'error');
+            } else {
+                this.showNotification('Ошибка создания упражнения', 'error');
+            }
+        }
+    }
+        
     async loadWaterPage(container) {
         // Загружаем HTML модуля воды
         const response = await fetch('water.html');
@@ -295,3 +514,4 @@ window.healthFlow = new HealthFlowApp();
 document.addEventListener('DOMContentLoaded', () => {
     window.healthFlow.init();
 });
+
