@@ -157,7 +157,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Добавление service worker для PWA (опционально)
+    // Регистрация Service Worker для офлайн работы
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').catch(console.error);
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/water-tracker/sw.js')
+                .then(registration => {
+                    console.log('ServiceWorker зарегистрирован:', registration.scope);
+                })
+                .catch(error => {
+                    console.log('Ошибка регистрации ServiceWorker:', error);
+                });
+        });
     }
+
 });
