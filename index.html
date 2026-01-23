@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Трекер воды 💧</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💧</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <h1>💧 Трекер воды</h1>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <div id="currentAmount">0</div>
+                <div class="label">Выпито сегодня</div>
+            </div>
+            <div class="stat-box">
+                <div id="targetAmount">2000</div>
+                <div class="label">Цель (мл)</div>
+            </div>
+            <div class="stat-box">
+                <div id="percentage">0%</div>
+                <div class="label">Прогресс</div>
+            </div>
+        </div>
+
+        <div class="progress-container">
+            <div id="progressBar" class="progress-bar"></div>
+        </div>
+
+        <div class="buttons">
+            <button onclick="addWater(250)">+250 мл (стакан)</button>
+            <button onclick="addWater(500)">+500 мл (бутылка)</button>
+            <button onclick="addWater(100)">+100 мл (глоток)</button>
+            <button onclick="resetWater()" class="reset">Сбросить день</button>
+        </div>
+
+        <div class="custom-add">
+            <input type="number" id="customAmount" placeholder="Другое количество" min="0">
+            <button onclick="addCustomWater()">Добавить</button>
+        </div>
+
+        <div class="target-settings">
+            <label for="targetInput">Цель на день (мл):</label>
+            <input type="number" id="targetInput" value="2000" min="500">
+            <button onclick="updateTarget()">Обновить</button>
+        </div>
+
+        <div class="history">
+            <h3>История сегодня:</h3>
+            <ul id="historyList"></ul>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
