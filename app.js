@@ -1,3 +1,5 @@
+[file name]: app.js
+[file content begin]
 // Главное приложение HealthFlow
 class HealthFlowApp {
     constructor() {
@@ -12,6 +14,10 @@ class HealthFlowApp {
             workouts: null,
             profile: null
         };
+        
+        this.db = null;
+        this.exerciseManager = null;
+        this.workoutTracker = null;
     }
     
     async init() {
@@ -19,6 +25,9 @@ class HealthFlowApp {
         
         // Загружаем состояние
         this.loadState();
+        
+        // Инициализируем базу данных
+        await this.initDatabase();
         
         // Создаём контейнер для страницы
         this.createPageContainer();
@@ -33,6 +42,17 @@ class HealthFlowApp {
         this.setupServiceWorker();
         
         console.log('✅ HealthFlow запущен');
+    }
+    
+    async initDatabase() {
+        try {
+            const { db } = await import('./db.js');
+            await db.init();
+            this.db = db;
+            console.log('✅ База данных инициализирована');
+        } catch (error) {
+            console.error('❌ Ошибка инициализации базы данных:', error);
+        }
     }
     
     loadState() {
@@ -85,16 +105,31 @@ class HealthFlowApp {
         const container = document.getElementById('currentPage');
         
         try {
-            // Для модуля воды загружаем отдельно
-            if (pageId === 'water') {
-                await this.loadWaterPage(container);
-            } else {
-                // Для других страниц показываем заглушки
-                container.innerHTML = this.getPageStub(pageId);
+            switch(pageId) {
+                case 'water':
+                    await this.loadWaterPage(container);
+                    break;
+                    
+                case 'workouts':
+                    await this.loadWorkoutsPage(container);
+                    break;
+                    
+                case 'profile':
+                    container.innerHTML = this.getPageStub(pageId);
+                    break;
+                    
+                default:
+                    container.innerHTML = `<div class="error-message">Страница не найдена</div>`;
             }
         } catch (error) {
             console.error(`❌ Ошибка загрузки страницы ${pageId}:`, error);
-            container.innerHTML = `<div class="error-message">Ошибка загрузки страницы</div>`;
+            container.innerHTML = `
+                <div class="error-message">
+                    <div style="font-size: 3rem; margin-bottom: 20px;">😕</div>
+                    <div style="font-size: 1.2rem; margin-bottom: 10px;">Ошибка загрузки страницы</div>
+                    <div style="color: var(--text-secondary);">${error.message}</div>
+                </div>
+            `;
         }
     }
     
@@ -122,35 +157,63 @@ class HealthFlowApp {
             }
         } catch (error) {
             console.error('❌ Ошибка загрузки модуля воды:', error);
+            this.showNotification('Ошибка загрузки модуля воды', 'error');
+        }
+    }
+    
+    async loadWorkoutsPage(container) {
+        // Загружаем HTML шаблон тренировок
+        const response = await fetch('workouts.html');
+        const html = await response.text();
+        
+        // Вставляем HTML
+        container.innerHTML = html;
+        
+        // Загружаем и инициализируем модуль тренировок
+        await this.loadWorkoutsModule();
+    }
+    
+    async loadWorkoutsModule() {
+        try {
+            // Загружаем менеджер упражнений
+            const { initExerciseManager } = await import('./exercises.js');
+            this.exerciseManager = await initExerciseManager(this.db);
+            
+            // Загружаем трекер тренировок
+            const { initWorkoutTracker } = await import('./workouts.js');
+            this.workoutTracker = await initWorkoutTracker(this.db, this.exerciseManager);
+            
+            // Инициализируем UI тренировок
+            await this.initWorkoutsUI();
+            
+            console.log('✅ Модуль тренировок загружен');
+        } catch (error) {
+            console.error('❌ Ошибка загрузки модуля тренировок:', error);
+            this.showNotification('Ошибка загрузки модуля тренировок', 'error');
+        }
+    }
+    
+    async initWorkoutsUI() {
+        // Эта функция будет реализована в workouts-ui.js
+        console.log('Инициализация UI тренировок...');
+        
+        // Временная заглушка
+        const skinCount = document.getElementById('workoutSkinCount');
+        if (skinCount) {
+            skinCount.textContent = this.state.totalSkins;
+        }
+        
+        // Кнопка темы
+        const themeToggle = document.getElementById('workoutThemeToggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                this.toggleTheme();
+            });
         }
     }
     
     getPageStub(pageId) {
         const stubs = {
-            workouts: `
-                <header class="page-header">
-                    <h1 class="page-title">Тренировки</h1>
-                    <div class="page-controls">
-                        <div class="skin-counter">
-                            ✨ <span>${this.state.totalSkins}</span>
-                        </div>
-                        <button class="theme-toggle" onclick="window.healthFlow.toggleTheme()">
-                            <div class="theme-icon">${this.state.theme === 'cozy' ? '🌙' : '☀️'}</div>
-                        </button>
-                    </div>
-                </header>
-                <div class="content-container">
-                    <div style="text-align: center; padding: 60px 20px;">
-                        <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;">🏋️</div>
-                        <h2 style="font-size: 1.5rem; margin-bottom: 10px; color: var(--text-primary);">
-                            Модуль тренировок
-                        </h2>
-                        <p style="color: var(--text-secondary); line-height: 1.5;">
-                            Скоро здесь появится система тренировок!
-                        </p>
-                    </div>
-                </div>
-            `,
             profile: `
                 <header class="page-header">
                     <h1 class="page-title">Профиль</h1>
@@ -286,12 +349,22 @@ class HealthFlowApp {
                 });
         }
     }
+    
+    // Геттеры для доступа к модулям извне
+    getExerciseManager() {
+        return this.exerciseManager;
+    }
+    
+    getWorkoutTracker() {
+        return this.workoutTracker;
+    }
 }
 
 // Создаём и экспортируем экземпляр приложения
-window.healthFlow = new HealthFlowApp();
+window.HealthFlow = new HealthFlowApp();
 
 // Запускаем приложение при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
-    window.healthFlow.init();
+    window.HealthFlow.init();
 });
+[file content end]
