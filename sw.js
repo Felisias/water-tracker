@@ -1,15 +1,15 @@
-const CACHE_NAME = 'healthflow-v3'; // Увеличиваем версию
+const CACHE_NAME = 'healthflow-v1';
 const urlsToCache = [
-    '/',
-    '/index.html',
-    '/style.css',
-    '/app.js',
-    '/main.js',
-    '/db.js',
-    '/exercises.js',
-    '/workouts.js',
-    '/water.js',
-    '/manifest.json'
+    '/healthflow/',
+    '/healthflow/index.html',
+    '/healthflow/water.html',
+    '/healthflow/workouts.html',
+    '/healthflow/profile.html',
+    '/healthflow/style.css',
+    '/healthflow/app.js',
+    '/healthflow/water.js',
+    '/healthflow/db.js',
+    '/healthflow/manifest.json'
 ];
 
 self.addEventListener('install', event => {
@@ -58,12 +58,6 @@ self.addEventListener('fetch', event => {
                             });
                         
                         return response;
-                    })
-                    .catch(() => {
-                        // Если нет сети и файла в кеше, показываем офлайн-страницу
-                        if (event.request.mode === 'navigate') {
-                            return caches.match('/index.html');
-                        }
                     });
             })
     );
