@@ -1,4 +1,4 @@
-const CACHE_NAME = 'water-tracker-v1';
+const CACHE_NAME = 'aquaflow-v2';
 const urlsToCache = [
   '/water-tracker/',
   '/water-tracker/index.html',
@@ -7,7 +7,6 @@ const urlsToCache = [
   '/water-tracker/manifest.json'
 ];
 
-// Установка Service Worker
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -18,7 +17,6 @@ self.addEventListener('install', event => {
   );
 });
 
-// Активация
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
@@ -34,25 +32,20 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Перехват запросов
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
       .then(response => {
-        // Если файл в кеше - возвращаем его
         if (response) {
           return response;
         }
         
-        // Иначе загружаем из сети
         return fetch(event.request)
           .then(response => {
-            // Не кешируем не-GET запросы или ошибки
             if (!response || response.status !== 200 || response.type !== 'basic') {
               return response;
             }
             
-            // Клонируем ответ для кеша
             const responseToCache = response.clone();
             caches.open(CACHE_NAME)
               .then(cache => {
