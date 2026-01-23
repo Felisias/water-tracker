@@ -1,3 +1,78 @@
 <div class="page" id="workoutsPage">
-    <!-- Контент загрузится через app.js -->
+    <header class="page-header">
+        <h1 class="page-title">Тренировки</h1>
+        <div class="page-controls">
+            <div class="skin-counter">
+                ✨ <span id="skinCountWorkouts">0</span>
+            </div>
+            <button class="theme-toggle" id="workoutsThemeToggle">
+                <div class="theme-icon">🌙</div>
+            </button>
+        </div>
+    </header>
+    
+    <div class="content-container">
+        <!-- Кнопка создания упражнения -->
+        <div class="create-exercise-section">
+            <button class="create-exercise-btn" id="createExerciseBtn">
+                <span class="btn-icon">+</span>
+                Создать упражнение
+            </button>
+        </div>
+
+        <!-- Список упражнений -->
+        <section class="exercises-section" id="exercisesSection">
+            <h2 class="section-title">Мои упражнения</h2>
+            <div class="exercises-list" id="exercisesList">
+                <!-- Упражнения будут загружены через JS -->
+                <div class="empty-exercises">
+                    <div class="empty-icon">🏋️</div>
+                    <div class="empty-text">Нет упражнений</div>
+                    <div class="empty-subtext">Создайте первое упражнение!</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Модальное окно создания упражнения -->
+        <div class="modal" id="exerciseModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Создать упражнение</h2>
+                    <button class="modal-close" id="modalClose">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="exerciseForm">
+                        <div class="form-group">
+                            <label for="exerciseName">Название упражнения</label>
+                            <input type="text" id="exerciseName" placeholder="Например: Приседания" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="exerciseCategory">Категория</label>
+                            <select id="exerciseCategory" required>
+                                <option value="">Выберите категорию</option>
+                                <option value="strength">Силовые</option>
+                                <option value="cardio">Кардио</option>
+                                <option value="flexibility">Растяжка</option>
+                                <option value="core">Пресс</option>
+                                <option value="upper">Верх тела</option>
+                                <option value="lower">Низ тела</option>
+                                <option value="full">Все тело</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="exerciseDescription">Описание (необязательно)</label>
+                            <textarea id="exerciseDescription" placeholder="Опишите технику выполнения..." rows="3"></textarea>
+                        </div>
+                        
+                        <div class="modal-buttons">
+                            <button type="button" class="btn-secondary" id="cancelBtn">Отмена</button>
+                            <button type="submit" class="btn-primary">Создать</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
