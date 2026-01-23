@@ -7,7 +7,11 @@ class WaterTracker {
         this.history = [];
         this.startTime = new Date();
         this.isAnimating = false;
-        this.skinCounter = 0; // Счетчик для накопления 250 мл
+        this.skinCounter = 0;
+        this.holdTimer = null;
+        this.isHolding = false;
+        this.holdAmount = 0;
+        this.currentHoldAmount = 0;
         
         this.init();
     }
@@ -45,7 +49,6 @@ class WaterTracker {
             const skinsData = JSON.parse(savedSkins);
             this.totalSkins = skinsData.total || 0;
             
-            // Если сегодняшняя дата не совпадает, обнуляем todaySkins
             if (skinsData.date !== today) {
                 this.todaySkins = 0;
             }
@@ -61,7 +64,6 @@ class WaterTracker {
     saveData() {
         const today = new Date().toDateString();
         
-        // Сохранение данных воды
         const waterData = {
             date: today,
             amount: this.waterAmount,
@@ -70,7 +72,6 @@ class WaterTracker {
         };
         localStorage.setItem('waterData', JSON.stringify(waterData));
         
-        // Сохранение скинтов
         const skinsData = {
             date: today,
             total: this.totalSkins,
@@ -78,13 +79,15 @@ class WaterTracker {
         };
         localStorage.setItem('waterSkins', JSON.stringify(skinsData));
         
-        // Сохранение цели
         localStorage.setItem('waterTarget', this.targetAmount.toString());
     }
 
     addWater(amount) {
         if (this.isAnimating) return;
+        if (amount <= 0) return;
+        
         this.isAnimating = true;
+        const oldWaterAmount = this.waterAmount;
         
         const time = new Date().toLocaleTimeString([], { 
             hour: '2-digit', 
@@ -92,15 +95,14 @@ class WaterTracker {
         });
         
         // Добавляем воду
-        const oldWaterAmount = this.waterAmount;
         this.waterAmount += amount;
         
         // Обработка скинтов
-        const skinsEarned = this.calculateSkins(amount);
+        const skinsEarned = this.calculateSkins(amount, true);
         if (skinsEarned > 0) {
             this.totalSkins += skinsEarned;
             this.todaySkins += skinsEarned;
-            this.createSparks(skinsEarned);
+            this.createSparks(skinsEarned, false);
         }
         
         // Добавляем в историю
@@ -108,91 +110,193 @@ class WaterTracker {
             amount,
             time,
             skins: skinsEarned,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            type: 'add'
         });
         
-        // Ограничиваем историю 15 записями
-        if (this.history.length > 15) {
-            this.history = this.history.slice(0, 15);
+        if (this.history.length > 20) {
+            this.history = this.history.slice(0, 20);
         }
         
         this.saveData();
-        this.animateWaterAddition(oldWaterAmount, this.waterAmount);
+        this.animateWaterChange(oldWaterAmount, this.waterAmount, true);
         this.updateDisplay();
         
-        // Показываем уведомление
-        let message = `+${amount} мл добавлено!`;
+        // Уведомление
+        let message = `+${amount} мл добавлено`;
         if (skinsEarned > 0) {
-            message += ` +${skinsEarned} ✨`;
+            message += ` +${skinsEarned}✨`;
             this.showNotification(message, 'skins');
         } else {
             this.showNotification(message, 'success');
         }
         
-        // Звуковой эффект (опционально)
-        this.playWaterSound();
+        this.playSound(true);
         
         setTimeout(() => {
             this.isAnimating = false;
-        }, 1200);
+        }, 1000);
     }
 
-    calculateSkins(amount) {
-        // Каждые 250 мл = 1 скинт
-        const oldCounter = this.skinCounter;
-        this.skinCounter = (oldCounter + amount) % 250;
+    removeWater(amount) {
+        if (this.isAnimating) return;
+        if (this.waterAmount <= 0) {
+            this.showNotification('Нечего удалять 😊', 'success');
+            return;
+        }
         
-        return Math.floor((oldCounter + amount) / 250);
+        this.isAnimating = true;
+        const oldWaterAmount = this.waterAmount;
+        
+        // Не позволяем уйти в минус
+        const actualRemove = Math.min(amount, this.waterAmount);
+        if (actualRemove <= 0) {
+            this.isAnimating = false;
+            return;
+        }
+        
+        const time = new Date().toLocaleTimeString([], { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+        
+        // Удаляем воду
+        this.waterAmount -= actualRemove;
+        
+        // Обработка скинтов (отнимаем если нужно)
+        const skinsLost = this.calculateSkins(actualRemove, false);
+        if (skinsLost > 0) {
+            this.totalSkins = Math.max(0, this.totalSkins - skinsLost);
+            this.todaySkins = Math.max(0, this.todaySkins - skinsLost);
+            this.createSparks(skinsLost, true);
+        }
+        
+        // Добавляем в историю
+        this.history.unshift({
+            amount: actualRemove,
+            time,
+            skins: skinsLost,
+            timestamp: Date.now(),
+            type: 'remove'
+        });
+        
+        if (this.history.length > 20) {
+            this.history = this.history.slice(0, 20);
+        }
+        
+        this.saveData();
+        this.animateWaterChange(oldWaterAmount, this.waterAmount, false);
+        this.updateDisplay();
+        
+        this.showNotification(`−${actualRemove} мл удалено`, 'remove');
+        this.playSound(false);
+        
+        setTimeout(() => {
+            this.isAnimating = false;
+        }, 1000);
     }
 
-    createSparks(count) {
+    calculateSkins(amount, isAdding) {
+        if (isAdding) {
+            const oldCounter = this.skinCounter;
+            this.skinCounter = (oldCounter + amount) % 250;
+            return Math.floor((oldCounter + amount) / 250);
+        } else {
+            // При удалении рассчитываем потерянные скинты
+            let tempCounter = this.skinCounter;
+            let skinsLost = 0;
+            let remaining = amount;
+            
+            // Сначала проверяем текущий скинт-счетчик
+            if (tempCounter > 0) {
+                const fromCounter = Math.min(tempCounter, remaining);
+                tempCounter -= fromCounter;
+                remaining -= fromCounter;
+                
+                // Если перешли через границу 250
+                if (tempCounter < 0) {
+                    tempCounter += 250;
+                    skinsLost++;
+                    remaining += 250;
+                }
+            }
+            
+            // Затем считаем полные скинты
+            skinsLost += Math.floor(remaining / 250);
+            remaining = remaining % 250;
+            
+            // Обновляем счетчик
+            this.skinCounter = tempCounter;
+            
+            return skinsLost;
+        }
+    }
+
+    createSparks(count, isNegative) {
         const container = document.getElementById('sparksContainer');
         
-        for (let i = 0; i < count * 3; i++) { // 3 искры за каждый скинт
+        for (let i = 0; i < count * 3; i++) {
             const spark = document.createElement('div');
-            spark.className = 'spark';
+            spark.className = `spark ${isNegative ? 'negative' : ''}`;
             
-            // Случайная позиция в области кнопок
-            const x = 50 + Math.random() * 300;
-            const y = window.innerHeight - 200 + Math.random() * 100;
+            const x = 100 + Math.random() * 200;
+            const y = window.innerHeight - 150 + Math.random() * 100;
             
             spark.style.left = `${x}px`;
             spark.style.top = `${y}px`;
-            
-            // Случайная задержка
             spark.style.animationDelay = `${Math.random() * 0.5}s`;
             
             container.appendChild(spark);
             
-            // Удаляем после анимации
             setTimeout(() => {
-                if (spark.parentNode) {
-                    spark.remove();
-                }
+                if (spark.parentNode) spark.remove();
             }, 2000);
         }
     }
 
-    animateWaterAddition(oldAmount, newAmount) {
+    animateWaterChange(oldAmount, newAmount, isAdding) {
         const fillElement = document.getElementById('waterFill');
         const oldPercent = Math.min(oldAmount / this.targetAmount * 100, 100);
         const newPercent = Math.min(newAmount / this.targetAmount * 100, 100);
         
         fillElement.style.height = `${oldPercent}%`;
         
-        // Используем CSS анимацию
-        fillElement.style.transition = 'height 1.2s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        // Создаем эффект ряби
+        this.createRippleEffect(isAdding);
         
-        // Ждем немного перед началом анимации
         setTimeout(() => {
             fillElement.style.height = `${newPercent}%`;
+            
+            // Анимация текста
+            this.animateNumberChange('currentAmount', oldAmount, newAmount);
         }, 50);
-        
-        // Эффект ряби
-        this.createRippleEffect();
     }
 
-    createRippleEffect() {
+    animateNumberChange(elementId, oldValue, newValue) {
+        const element = document.getElementById(elementId);
+        const duration = 1000;
+        const startTime = Date.now();
+        const difference = newValue - oldValue;
+        
+        const animate = () => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            // Кубическая easing функция
+            const easeProgress = 1 - Math.pow(1 - progress, 3);
+            const currentValue = Math.round(oldValue + difference * easeProgress);
+            
+            element.textContent = currentValue;
+            
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            }
+        };
+        
+        animate();
+    }
+
+    createRippleEffect(isAdding) {
         const circle = document.querySelector('.water-circle');
         const ripple = document.createElement('div');
         
@@ -202,7 +306,7 @@ class WaterTracker {
             left: 50%;
             width: 100%;
             height: 100%;
-            border: 2px solid rgba(6, 180, 143, 0.3);
+            border: 3px solid ${isAdding ? 'rgba(6, 180, 143, 0.4)' : 'rgba(255, 107, 107, 0.4)'};
             border-radius: 50%;
             transform: translate(-50%, -50%) scale(0);
             animation: rippleExpand 1s ease-out;
@@ -211,27 +315,64 @@ class WaterTracker {
         `;
         
         circle.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 1000);
+    }
+
+    startHold(amount) {
+        if (this.isHolding) return;
         
-        // Добавляем стиль для анимации
-        if (!document.getElementById('ripple-style')) {
-            const style = document.createElement('style');
-            style.id = 'ripple-style';
-            style.textContent = `
-                @keyframes rippleExpand {
-                    0% {
-                        transform: translate(-50%, -50%) scale(0);
-                        opacity: 1;
-                    }
-                    100% {
-                        transform: translate(-50%, -50%) scale(1.1);
-                        opacity: 0;
-                    }
-                }
-            `;
-            document.head.appendChild(style);
+        this.isHolding = true;
+        this.holdAmount = amount;
+        this.currentHoldAmount = 0;
+        
+        // Показываем индикатор
+        const indicator = document.getElementById('holdIndicator');
+        document.getElementById('holdAmount').textContent = `0 мл`;
+        indicator.classList.add('show');
+        
+        // Добавляем класс на кнопку
+        const buttons = document.querySelectorAll(`[data-amount="${amount}"]`);
+        buttons.forEach(btn => btn.classList.add('removing'));
+        
+        // Таймер для постепенного удаления
+        this.holdTimer = setInterval(() => {
+            if (this.waterAmount <= 0) {
+                this.stopHold();
+                return;
+            }
+            
+            this.currentHoldAmount += amount;
+            document.getElementById('holdAmount').textContent = `-${this.currentHoldAmount} мл`;
+            
+            // Вибрация (если поддерживается)
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+            
+        }, 300); // Удаляем каждые 300ms
+    }
+
+    stopHold() {
+        if (!this.isHolding) return;
+        
+        clearInterval(this.holdTimer);
+        this.isHolding = false;
+        
+        // Скрываем индикатор
+        const indicator = document.getElementById('holdIndicator');
+        indicator.classList.remove('show');
+        
+        // Убираем класс с кнопки
+        const buttons = document.querySelectorAll('.action-btn.removing');
+        buttons.forEach(btn => btn.classList.remove('removing'));
+        
+        // Если что-то удалили
+        if (this.currentHoldAmount > 0) {
+            this.removeWater(this.currentHoldAmount);
         }
         
-        setTimeout(() => ripple.remove(), 1000);
+        this.holdAmount = 0;
+        this.currentHoldAmount = 0;
     }
 
     resetWater() {
@@ -260,11 +401,6 @@ class WaterTracker {
         document.getElementById('progressPercentage').textContent = `${percentage}%`;
         document.getElementById('skinCount').textContent = this.totalSkins;
         document.getElementById('todaySkins').textContent = this.todaySkins;
-        
-        // Обновление информации о следующем скинте
-        const mlToNextSkin = 250 - this.skinCounter;
-        document.getElementById('nextSkinInfo').textContent = 
-            mlToNextSkin > 0 ? `+1 ✨ через ${mlToNextSkin} мл` : '+1 ✨ в следующем стакане!';
         
         // Обновление статистики
         this.updateStats();
@@ -295,12 +431,11 @@ class WaterTracker {
         
         // Время до цели
         if (avgPerHour > 0 && remaining > 0) {
-            const hoursRemaining = remaining / avgPerHour;
-            const minutesRemaining = Math.round(hoursRemaining * 60);
+            const minutesRemaining = Math.round((remaining / avgPerHour) * 60);
             const hours = Math.floor(minutesRemaining / 60);
             const minutes = minutesRemaining % 60;
             document.getElementById('timeRemaining').textContent = 
-                `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                `${hours}:${minutes.toString().padStart(2, '0')}`;
         } else {
             document.getElementById('timeRemaining').textContent = '--:--';
         }
@@ -313,7 +448,7 @@ class WaterTracker {
             historyList.innerHTML = `
                 <div class="empty-history">
                     <div class="empty-icon">💧</div>
-                    <div class="empty-text">Начните свой путь к здоровью!</div>
+                    <div class="empty-text">Начните отслеживать воду!</div>
                     <div class="empty-subtext">Каждые 250 мл = 1 скинт ✨</div>
                 </div>
             `;
@@ -324,8 +459,10 @@ class WaterTracker {
             <div class="history-item">
                 <span class="history-time">${item.time}</span>
                 <div style="display: flex; align-items: center; gap: 12px;">
-                    <span class="history-amount">+${item.amount} мл</span>
-                    ${item.skins > 0 ? `<span class="history-skins">+${item.skins} ✨</span>` : ''}
+                    <span class="history-amount ${item.type === 'remove' ? 'negative' : ''}">
+                        ${item.type === 'remove' ? '−' : '+'}${item.amount} мл
+                    </span>
+                    ${item.skins > 0 ? `<span class="history-skins">${item.type === 'remove' ? '−' : '+'}${item.skins}✨</span>` : ''}
                 </div>
             </div>
         `).join('');
@@ -341,8 +478,7 @@ class WaterTracker {
         }, 3000);
     }
 
-    playWaterSound() {
-        // Простой звуковой эффект через Web Audio API
+    playSound(isAdding) {
         try {
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const oscillator = audioContext.createOscillator();
@@ -351,16 +487,16 @@ class WaterTracker {
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
             
-            oscillator.frequency.value = 800;
+            oscillator.frequency.value = isAdding ? 800 : 400;
             oscillator.type = 'sine';
             
             gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
             
             oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.3);
+            oscillator.stop(audioContext.currentTime + 0.2);
         } catch (e) {
-            // Если Web Audio API не доступен, просто игнорируем
+            // Игнорируем ошибки аудио
         }
     }
 
@@ -381,7 +517,6 @@ class WaterTracker {
             const icon = document.querySelector('.theme-icon');
             icon.textContent = newTheme === 'cozy' ? '🌙' : '☀️';
             
-            // Обновляем цвет темы для PWA
             const metaThemeColor = document.querySelector('meta[name="theme-color"]');
             metaThemeColor.setAttribute('content', newTheme === 'cozy' ? '#F5F1E6' : '#FFFFFF');
         });
@@ -409,33 +544,86 @@ class WaterTracker {
             input.value = '';
             input.blur();
         } else if (amount > 5000) {
-            this.showNotification('Слишком большое количество! Максимум 5000 мл.', 'success');
+            this.showNotification('Максимум 5000 мл за раз', 'success');
         } else {
-            this.showNotification('Введите корректное количество (1-5000 мл)', 'success');
+            this.showNotification('Введите количество от 1 до 5000 мл', 'success');
+        }
+    }
+
+    removeCustomWater() {
+        const input = document.getElementById('customAmount');
+        const amount = parseInt(input.value);
+        
+        if (amount && amount > 0 && amount <= 5000) {
+            this.removeWater(amount);
+            input.value = '';
+            input.blur();
+        } else if (amount > 5000) {
+            this.showNotification('Максимум 5000 мл за раз', 'success');
+        } else {
+            this.showNotification('Введите количество от 1 до 5000 мл', 'success');
         }
     }
 }
 
-// Инициализация приложения при загрузке страницы
+// Глобальные функции для обработки кнопок
+let isTouchDevice = 'ontouchstart' in window;
+let activeHoldButton = null;
+
+function handleButtonPress(event, amount) {
+    event.preventDefault();
+    
+    // Для тач-устройств: долгое нажатие = удаление
+    // Для ПК: правая кнопка мыши = удаление
+    const isRemove = isTouchDevice ? 
+        (event.type === 'touchstart') : 
+        (event.button === 2 || event.ctrlKey);
+    
+    if (isRemove) {
+        // Начинаем удаление при зажатии
+        if (window.waterTracker && !window.waterTracker.isHolding) {
+            window.waterTracker.startHold(amount);
+            activeHoldButton = event.currentTarget;
+        }
+    } else {
+        // Нормальное добавление при клике
+        if (window.waterTracker) {
+            window.waterTracker.addWater(amount);
+        }
+    }
+}
+
+function handleButtonRelease(event, amount) {
+    event.preventDefault();
+    
+    // Останавливаем удаление если оно активно
+    if (window.waterTracker && window.waterTracker.isHolding) {
+        window.waterTracker.stopHold();
+        activeHoldButton = null;
+    }
+}
+
+// Запрещаем контекстное меню на кнопках
+document.addEventListener('contextmenu', function(e) {
+    if (e.target.closest('.action-btn')) {
+        e.preventDefault();
+    }
+});
+
+// Инициализация приложения
 document.addEventListener('DOMContentLoaded', () => {
     window.waterTracker = new WaterTracker();
 });
 
-// Глобальные функции для вызова из HTML
-function addWater(amount) {
-    if (window.waterTracker) {
-        window.waterTracker.addWater(amount);
-    }
+// Глобальные функции
+function addCustomWater() {
+    if (window.waterTracker) window.waterTracker.addCustomWater();
+}
+
+function removeCustomWater() {
+    if (window.waterTracker) window.waterTracker.removeCustomWater();
 }
 
 function resetWater() {
-    if (window.waterTracker) {
-        window.waterTracker.resetWater();
-    }
-}
-
-function addCustomWater() {
-    if (window.waterTracker) {
-        window.waterTracker.addCustomWater();
-    }
+    if (window.waterTracker) window.waterTracker.resetWater();
 }
