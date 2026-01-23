@@ -360,4 +360,77 @@ body {
         width: 40px;
         height: 40px;
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    .primary-btn {
+        width: 100%;
+        padding: 14px;
+        border-radius: 14px;
+        border: none;
+        background: var(--primary);
+        color: #fff;
+        font-size: 1rem;
+        margin-bottom: 16px;
+    }
+    
+    .exercise-list {
+        display: grid;
+        gap: 14px;
+    }
+    
+    .exercise-card {
+        background: var(--surface);
+        border-radius: 16px;
+        padding: 12px;
+        box-shadow: var(--shadow-light);
+    }
+    
+    .exercise-card img {
+        width: 100%;
+        border-radius: 12px;
+        margin-bottom: 8px;
+    }
+    
+    .modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal.hidden {
+        display: none;
+    }
+    
+    .modal-content {
+        background: #fff;
+        padding: 20px;
+        border-radius: 20px;
+        width: 90%;
+    }
+
+
+
+
+
+    
 }
+
