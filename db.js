@@ -49,6 +49,43 @@ class HealthFlowDB {
                     historyStore.createIndex('workoutId', 'workoutId', { unique: false });
                     historyStore.createIndex('date', 'date', { unique: false });
                 }
+
+
+
+
+
+                                      // В db.js в request.onupgradeneeded добавим:
+                if (!db.objectStoreNames.contains('exercises')) {
+                    const exerciseStore = db.createObjectStore('exercises', { 
+                        keyPath: 'id',
+                        autoIncrement: true 
+                    });
+                    exerciseStore.createIndex('category', 'category', { unique: false });
+                    exerciseStore.createIndex('name', 'name', { unique: false });
+                }
+                
+                if (!db.objectStoreNames.contains('workouts')) {
+                    const workoutStore = db.createObjectStore('workouts', { 
+                        keyPath: 'id',
+                        autoIncrement: true 
+                    });
+                    workoutStore.createIndex('date', 'date', { unique: false });
+                    workoutStore.createIndex('type', 'type', { unique: false });
+                }
+                
+                if (!db.objectStoreNames.contains('workoutHistory')) {
+                    const historyStore = db.createObjectStore('workoutHistory', { 
+                        keyPath: 'id',
+                        autoIncrement: true 
+                    });
+                    historyStore.createIndex('workoutId', 'workoutId', { unique: false });
+                    historyStore.createIndex('date', 'date', { unique: false });
+                }             
+
+
+
+
+                
             };
         });
     }
@@ -111,4 +148,5 @@ class HealthFlowDB {
 }
 
 // Экспортируем экземпляр базы данных
+
 export const db = new HealthFlowDB();
