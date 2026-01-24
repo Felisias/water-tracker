@@ -1568,7 +1568,7 @@ class HealthFlowApp {
         contentContainer.innerHTML = `
             <!-- Заголовок с кнопкой назад -->
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
-                <button id="backBtn" style="
+                <button id="backToStage2Btn" style="
                     background: transparent;
                     border: none;
                     color: var(--text-secondary);
@@ -1627,20 +1627,12 @@ class HealthFlowApp {
             <!-- Информация о тренировке -->
             <div style="
                 background: var(--surface);
-                border: 2px solid ${workout.lastCompleted ? workout.color : 'var(--border-light)'};
+                border: 2px solid ${this.currentWorkoutData.color};
                 border-radius: 14px;
-                padding: 0;
-                opacity: 0;
-                animation: fadeIn 0.3s ease-out ${index * 0.1}s forwards;
-                transition: all 0.2s ease;
-                overflow: hidden;
-                border-left: 8px solid ${workout.color};
-                border-top: 2px solid ${workout.lastCompleted ? workout.color : 'var(--border-light)'};
+                padding: 18px;
+                margin-bottom: 20px;
+                border-left: 8px solid ${this.currentWorkoutData.color};
             ">
-
-                <!-- Основной контент -->
-                <div style="padding: 18px;">
-
                 <div style="font-weight: 700; color: var(--text-primary); font-size: 18px; margin-bottom: 6px;">
                     ${this.currentWorkoutData.name}
                 </div>
@@ -1685,7 +1677,7 @@ class HealthFlowApp {
                 ` : ''}
             </div>
             
-            <!-- Список добавленных упражнений (с drag & drop) -->
+            <!-- Список добавленных упражнений -->
             <div id="addedExercisesList" style="margin-bottom: 24px; min-height: 100px;"
                  ondragover="event.preventDefault();"
                  ondrop="window.healthFlow.handleExerciseDrop(event)">
@@ -1762,8 +1754,8 @@ class HealthFlowApp {
             </div>
         `;
 
-        // Инициализируем интерактивные элементы
-        this.initializeWorkoutFormStage2();
+        // Вместо вызова initializeWorkoutFormStage2() здесь, сделаем это с задержкой
+        setTimeout(() => this.initializeWorkoutFormStage2(), 50);
     }
 
 
@@ -2248,9 +2240,11 @@ class HealthFlowApp {
 
 
 
-    initializeWorkoutFormStage2() {
+        initializeWorkoutFormStage2() {
+        console.log('Инициализация стадии 2...');
+        
         // Кнопка назад
-        const backBtn = document.getElementById('backBtn');
+        const backBtn = document.getElementById('backToStage2Btn');
         if (backBtn) {
             backBtn.addEventListener('click', () => {
                 if (this.editingWorkoutId) {
