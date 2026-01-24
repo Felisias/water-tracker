@@ -1,3 +1,35 @@
 <div class="page" id="workoutsPage">
-    <!-- Контент загрузится через app.js -->
+    <header class="page-header">
+        <h1 class="page-title">Тренировки</h1>
+        <div class="page-controls">
+            <div class="skin-counter">
+                ✨ <span id="skinCount">0</span>
+            </div>
+            <button class="theme-toggle" onclick="window.healthFlow.toggleTheme()">
+                <div class="theme-icon">🌙</div>
+            </button>
+        </div>
+    </header>
+    
+    <div class="content-container">
+        <!-- Секция упражнений -->
+        <section class="exercises-section">
+            <div class="exercises-header">
+                <h2 class="section-title">Мои упражнения</h2>
+                <button class="create-exercise-btn" id="createExerciseBtn">
+                    <span class="btn-icon">+</span>
+                    Новое упражнение
+                </button>
+            </div>
+            
+            <div class="exercises-container" id="exercisesContainer">
+                <!-- Упражнения будут загружены через JS -->
+            </div>
+        </section>
+    </div>
 </div>
+
+<!-- Подключаем стили для упражнений -->
+<style>
+    @import url('exercises.css');
+</style>
