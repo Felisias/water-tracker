@@ -731,26 +731,26 @@ class HealthFlowApp {
                             Редактировать
                         </button>
                         
-                        <button onclick="window.healthFlow.deleteWorkout(${workout.id})" style="
-                            background: rgba(255, 107, 107, 0.1);
-                            border: none;
+                        <button onclick="window.healthFlow.deleteExercise(${exercise.id})" style="
+                            flex: 1;
+                            background: transparent;
+                            border: 2px solid var(--remove);
                             color: var(--remove);
                             padding: 10px;
                             border-radius: 8px;
-                            font-size: 18px;
-                            font-weight: bold;
+                            font-size: 14px;
+                            font-weight: 600;
                             cursor: pointer;
                             transition: all 0.2s ease;
                             display: flex;
                             align-items: center;
                             justify-content: center;
-                            width: 40px;
-                            height: 40px;
-                            min-width: 40px;
+                            gap: 6px;
                         "
-                        onmouseover="this.style.background='rgba(255,107,107,0.2)'; this.style.transform='scale(1.1)';"
-                        onmouseout="this.style.background='rgba(255,107,107,0.1)'; this.style.transform='scale(1)';">
-                            ❌
+                        onmouseover="this.style.background='rgba(255,107,107,0.1)';"
+                        onmouseout="this.style.background='transparent';">
+                            <span style="font-size: 16px;">🗑️</span>
+                            Удалить
                         </button>
                     </div>
                 </div>
@@ -3324,28 +3324,28 @@ class HealthFlowApp {
                                 </button>
                                 
                                 <button onclick="window.healthFlow.deleteWorkout(${workout.id})" style="
-                                    background: transparent;
-                                    border: 2px solid var(--remove);
+                                    background: rgba(255, 107, 107, 0.1);
+                                    border: none;
                                     color: var(--remove);
-                                    padding: 10px 16px;
+                                    padding: 10px;
                                     border-radius: 8px;
-                                    font-size: 14px;
-                                    font-weight: 600;
+                                    font-size: 18px;
+                                    font-weight: bold;
                                     cursor: pointer;
                                     transition: all 0.2s ease;
                                     display: flex;
                                     align-items: center;
                                     justify-content: center;
-                                    gap: 6px;
-                                    flex: 1;
+                                    width: 40px;
+                                    height: 40px;
+                                    min-width: 40px;
                                 "
-                                onmouseover="this.style.background='rgba(255,107,107,0.1)'; this.style.transform='translateY(-2px)';"
-                                onmouseout="this.style.background='transparent'; this.style.transform='translateY(0)';">
-                                    <span style="font-size: 16px;">🗑️</span>
-                                    Удалить
+                                onmouseover="this.style.background='rgba(255,107,107,0.2)'; this.style.transform='scale(1.1)';"
+                                onmouseout="this.style.background='rgba(255,107,107,0.1)'; this.style.transform='scale(1)';">
+                                    ❌
                                 </button>
                             </div>
-                            
+
                             <div style="text-align: center;">
                                 <div style="
                                     font-size: 13px;
