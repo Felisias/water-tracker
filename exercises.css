@@ -1,0 +1,360 @@
+/* Стили для модуля упражнений */
+.exercises-section {
+    animation: fadeIn 0.8s ease-out;
+    margin-bottom: 80px;
+}
+
+.exercises-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 0 16px;
+}
+
+.create-exercise-btn {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 12px 24px;
+    color: white;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition);
+}
+
+.create-exercise-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(6, 180, 143, 0.3);
+}
+
+.btn-icon {
+    font-size: 1.2rem;
+}
+
+.exercises-container {
+    padding: 0 16px;
+}
+
+.category-section {
+    margin-bottom: 24px;
+}
+
+.category-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    padding-left: 8px;
+}
+
+.exercises-list {
+    display: grid;
+    gap: 12px;
+}
+
+.exercise-card {
+    background: var(--surface);
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius);
+    padding: 16px;
+    transition: var(--transition);
+}
+
+.exercise-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary-light);
+    box-shadow: var(--shadow);
+}
+
+.exercise-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.exercise-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.favorite-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.3rem;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: var(--transition);
+    padding: 4px;
+    line-height: 1;
+}
+
+.favorite-btn.active {
+    color: #FF9A76;
+}
+
+.favorite-btn:hover {
+    transform: scale(1.2);
+}
+
+.exercise-description {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 12px;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: var(--radius-sm);
+}
+
+.exercise-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-light);
+}
+
+.difficulty-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+.difficulty-badge.низкий {
+    background: rgba(6, 180, 143, 0.1);
+    color: var(--primary);
+}
+
+.difficulty-badge.средний {
+    background: rgba(255, 154, 118, 0.1);
+    color: var(--accent);
+}
+
+.difficulty-badge.высокий {
+    background: rgba(255, 107, 107, 0.1);
+    color: var(--remove);
+}
+
+.delete-exercise {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+
+.delete-exercise:hover {
+    background: rgba(255, 107, 107, 0.1);
+    color: var(--remove);
+}
+
+.empty-exercises {
+    text-align: center;
+    padding: 60px 20px;
+    background: var(--surface);
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius);
+    margin: 20px 16px;
+}
+
+.empty-icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    opacity: 0.3;
+}
+
+.empty-text {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.empty-subtext {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* Модальное окно */
+.exercise-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease-out;
+    padding: 20px;
+}
+
+.modal-content {
+    background: var(--surface);
+    border-radius: var(--radius);
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.modal-header h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.close-modal {
+    background: transparent;
+    border: none;
+    font-size: 1.8rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: var(--transition);
+}
+
+.close-modal:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+
+.modal-input,
+.modal-select,
+.modal-textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    font-family: inherit;
+    background: var(--surface);
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+.modal-input:focus,
+.modal-select:focus,
+.modal-textarea:focus {
+    outline: none;
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(6, 180, 143, 0.1);
+}
+
+.modal-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 12px;
+    padding: 20px;
+    border-top: 1px solid var(--border-light);
+}
+
+.modal-btn {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.modal-btn.cancel {
+    background: var(--surface);
+    border: 2px solid var(--border-light);
+    color: var(--text-secondary);
+}
+
+.modal-btn.cancel:hover {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.modal-btn.create {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+}
+
+.modal-btn.create:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(6, 180, 143, 0.3);
+}
+
+@media (max-width: 500px) {
+    .exercises-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+    
+    .create-exercise-btn {
+        justify-content: center;
+    }
+    
+    .modal-content {
+        margin: 10px;
+    }
+    
+    .modal-footer {
+        flex-direction: column;
+    }
+}
