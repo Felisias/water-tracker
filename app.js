@@ -4215,13 +4215,18 @@ class HealthFlowApp {
                         background: rgba(255, 255, 255, 0.2);
                         border-radius: 3px;
                         overflow: hidden;
+                        position: relative; /* ДОБАВИЛИ */
+
                     ">
                         <div id="workoutProgressBar" style="
-                            width: ${progressPercent}%;
+                            width: ${Math.min(progressPercent, 100)}%; /* ИСПРАВИЛИ */
                             height: 100%;
                             background: white;
                             border-radius: 3px;
                             transition: width 0.3s ease;
+                            position: absolute; /* ДОБАВИЛИ */
+                            left: 0;
+                            top: 0;
                         "></div>
                     </div>
                 </div>
@@ -4343,6 +4348,19 @@ class HealthFlowApp {
         this.startWorkoutTimer();
     }
 
+    // Обновление счетчика прогресса
+    updateProgressCounter() {
+        if (!this.currentActiveWorkout) return;
+
+        const workout = this.currentActiveWorkout;
+        const progressText = document.querySelector('[style*="Прогресс"] span:last-child');
+
+        if (progressText) {
+            progressText.textContent = `${workout.completedSets}/${workout.totalSets} подходов`;
+        }
+    }
+
+    // Инициализация выполнения тренировки
     // Инициализация выполнения тренировки
     initializeWorkoutExecution() {
         // Кнопка назад
@@ -4363,13 +4381,13 @@ class HealthFlowApp {
             });
         }
 
-        // Кнопка выполнения следующего подхода
-        const completeBtn = document.getElementById('completeNextSetBtn');
-        if (completeBtn) {
-            completeBtn.addEventListener('click', () => {
-                this.completeNextSet();
-            });
-        }
+        // Кнопка выполнения следующего подхода - УБИРАЕМ ОБРАБОТЧИК ЗДЕСЬ
+        // const completeBtn = document.getElementById('completeNextSetBtn');
+        // if (completeBtn) {
+        //     completeBtn.addEventListener('click', () => {
+        //         this.completeNextSet();
+        //     });
+        // }
 
         // Кнопки в модальном окне паузы
         const resumeBtn = document.getElementById('resumeWorkoutBtn');
@@ -4607,32 +4625,27 @@ class HealthFlowApp {
 
     // Выбор подхода для выполнения
     // Обновленный метод selectSet с возможностью редактирования
-    selectSet(exerciseIndex, setIndex) {
-        if (!this.currentActiveWorkout) return;
+    // Выбор подхода для выполнения (с возможностью редактирования в любое время)
+    selectSet(exerciseIndex, setIndex, event) {
+        if (!this.currentActiveWorkout || !event) return;
+
+        // Останавливаем всплытие события, если оно было вызвано кликом на чекбокс
+        if (event.target.closest('.set-item')) {
+            event.stopPropagation();
+        }
 
         const workout = this.currentActiveWorkout;
         const set = workout.exercises[exerciseIndex].sets[setIndex];
 
-        // Если подход уже выполнен, показываем модалку для редактирования
-        if (set.completed) {
-            this.showSetEditModal(exerciseIndex, setIndex, set);
-            return;
-        }
+        // В ЛЮБОЙ МОМЕНТ показываем модалку для редактирования
+        this.showSetEditModal(exerciseIndex, setIndex, set);
 
-        // Иначе просто переходим к выбранному подходу
+        // Также обновляем текущий выбранный подход
         workout.currentExerciseIndex = exerciseIndex;
         workout.currentSetIndex = setIndex;
 
         // Перерисовываем ленту
         this.loadWorkoutExercises();
-
-        // Прокручиваем к выбранному подходу
-        setTimeout(() => {
-            const setElement = document.querySelector(`[data-exercise-index="${exerciseIndex}"][data-set-index="${setIndex}"]`);
-            if (setElement) {
-                setElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        }, 100);
     }
 
     // Модальное окно для редактирования повторов и веса
@@ -4832,6 +4845,7 @@ class HealthFlowApp {
             currentSet.completed = true;
             workout.completedSets++;
             this.updateProgressBar();
+            this.updateProgressCounter(); // ДОБАВИЛИ ЭТО
         }
 
         // Ищем следующий невыполненный подход
@@ -5274,36 +5288,47 @@ class HealthFlowApp {
     }
 
 
+    // Обновление кнопки завершения
     updateCompleteButton() {
         if (!this.currentActiveWorkout) return;
 
         const workout = this.currentActiveWorkout;
         const completeBtn = document.getElementById('completeNextSetBtn');
+
+        if (!completeBtn) return;
+
+        // УДАЛЯЕМ старый обработчик
+        completeBtn.replaceWith(completeBtn.cloneNode(true));
+
+        // Получаем новую кнопку
+        const newCompleteBtn = document.getElementById('completeNextSetBtn');
         const completeText = document.getElementById('completeSetText');
         const completeIcon = document.getElementById('completeSetIcon');
 
-        if (!completeBtn || !completeText || !completeIcon) return;
+        if (!newCompleteBtn || !completeText || !completeIcon) return;
 
         const allCompleted = workout.completedSets === workout.totalSets;
 
         if (allCompleted) {
             completeText.textContent = 'Завершить тренировку';
             completeIcon.textContent = '🏁';
+            newCompleteBtn.style.background = 'linear-gradient(135deg, #FF9A76, #E86A50)';
 
-            // Меняем цвет кнопки
-            completeBtn.style.background = 'linear-gradient(135deg, #FF9A76, #E86A50)';
+            // НОВЫЙ обработчик для завершения
+            newCompleteBtn.addEventListener('click', () => {
+                this.finishWorkout();
+            });
         } else {
             completeText.textContent = 'Выполнить следующий подход';
             completeIcon.textContent = '✓';
+            newCompleteBtn.style.background = 'linear-gradient(135deg, var(--primary), var(--primary-dark))';
 
-            // Возвращаем обычный цвет
-            completeBtn.style.background = 'linear-gradient(135deg, var(--primary), var(--primary-dark))';
+            // НОВЫЙ обработчик для выполнения подхода
+            newCompleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.completeNextSet();
+            });
         }
-
-        // Обновляем обработчик кнопки
-        completeBtn.onclick = allCompleted ?
-            () => this.finishWorkout() :
-            () => this.completeNextSet();
     }
 }
 
