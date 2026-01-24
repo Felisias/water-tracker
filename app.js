@@ -3951,6 +3951,35 @@ class HealthFlowApp {
         this.showNotification(`Упражнение "${name}" обновлено!`, 'success');
         this.showExercisesSection();
     }
+
+
+    // Вспомогательный метод для преобразования hex в rgba
+    hexToRgba(hex, alpha) {
+        if (!hex) return 'rgba(0,0,0,0.1)';
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    // Метод затемнения цвета (если его нет)
+    darkenColor(color) {
+        if (!color) return '#06B48F';
+        try {
+            const hex = color.replace('#', '');
+            const r = Math.max(0, parseInt(hex.substr(0, 2), 16) * 0.8);
+            const g = Math.max(0, parseInt(hex.substr(2, 2), 16) * 0.8);
+            const b = Math.max(0, parseInt(hex.substr(4, 2), 16) * 0.8);
+
+            const dr = Math.floor(r).toString(16).padStart(2, '0');
+            const dg = Math.floor(g).toString(16).padStart(2, '0');
+            const db = Math.floor(b).toString(16).padStart(2, '0');
+
+            return `#${dr}${dg}${db}`;
+        } catch (e) {
+            return '#048271'; // Темно-зеленый по умолчанию
+        }
+    }
 }
 
 // Создаём и экспортируем экземпляр приложения
