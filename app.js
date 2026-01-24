@@ -3103,6 +3103,7 @@ class HealthFlowApp {
     // Загрузка списка тренировок (с небольшими изменениями для цвета)
     // Загрузка списка тренировок (с небольшими изменениями для цвета)
     // Загрузка списка тренировок (ОБНОВЛЕННЫЙ ДИЗАЙН)
+    // Загрузка списка тренировок (ИСПРАВЛЕННАЯ ВЕРСИЯ)
     loadWorkouts() {
         const container = document.getElementById('workoutsList');
         if (!container) return;
@@ -3129,18 +3130,17 @@ class HealthFlowApp {
                 <div style="
                     background: var(--surface);
                     border: 2px solid ${workout.lastCompleted ? workout.color : 'var(--border-light)'};
-                border-radius: 14px;
-                padding: 0;
-                opacity: 0;
-                animation: fadeIn 0.3s ease-out ${index * 0.1}s forwards;
-                transition: all 0.2s ease;
-                overflow: hidden;
-                border-left: 8px solid ${workout.color};
-                border-top: 2px solid ${workout.lastCompleted ? workout.color : 'var(--border-light)'};
-            ">
-
-                <!-- Основной контент -->
-                <div style="padding: 18px;">
+                    border-radius: 14px;
+                    padding: 0;
+                    opacity: 0;
+                    animation: fadeIn 0.3s ease-out ${index * 0.1}s forwards;
+                    transition: all 0.2s ease;
+                    overflow: hidden;
+                    border-left: 8px solid ${workout.color};
+                    border-top: 2px solid ${workout.lastCompleted ? workout.color : 'var(--border-light)'};
+                ">
+                    <!-- Основной контент -->
+                    <div style="padding: 18px;">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
                             <div style="flex: 1;">
                                 <div style="font-weight: 800; color: var(--text-primary); font-size: 18px; margin-bottom: 8px;">
@@ -3197,8 +3197,8 @@ class HealthFlowApp {
                             </div>
                         ` : ''}
                         
-                        <!-- Кнопка "Начать" (ШИРЕ) -->
-                        <div style="margin-bottom: 12px;">
+                        <!-- Кнопка "Начать" -->
+                        <div style="margin-bottom: 16px;">
                             <button onclick="window.healthFlow.startWorkout(${workout.id})" style="
                                 width: 100%;
                                 background: linear-gradient(135deg, ${workout.color}, ${this.darkenColor(workout.color)});
@@ -3215,63 +3215,74 @@ class HealthFlowApp {
                                 justify-content: center;
                                 gap: 10px;
                             "
-                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px ${workout.color}40';"
+                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px ${this.hexToRgba(workout.color, 0.4)}';"
                             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
                                 <span style="font-size: 18px;">🔥</span>
                                 Начать тренировку
                             </button>
                         </div>
                         
-                            <!-- Нижний блок с редактированием и удалением -->
-                            <div style="display: flex; flex-direction: column; gap: 12px; padding-top: 12px; border-top: 1px solid var(--border-light);">
-                                <div style="display: flex; gap: 8px;">
-                                    <button onclick="window.healthFlow.editWorkout(${workout.id})" style="
-                                        background: transparent;
-                                        border: 2px solid var(--primary);
-                                        color: var(--primary);
-                                        padding: 8px 16px;
-                                        border-radius: 8px;
-                                        font-size: 14px;
-                                        font-weight: 600;
-                                        cursor: pointer;
-                                        transition: all 0.2s ease;
-                                        display: flex;
-                                        align-items: center;
-                                        gap: 6px;
-                                    "
-                                    onmouseover="this.style.background='rgba(6,180,143,0.1)';"
-                                    onmouseout="this.style.background='transparent';">
-                                        <span style="font-size: 16px;">✏️</span>
-                                        Редактировать
-                                    </button>
-                                    
-                                    <button onclick="window.healthFlow.deleteWorkout(${workout.id})" style="
-                                        background: transparent;
-                                        border: 2px solid var(--remove);
-                                        color: var(--remove);
-                                        padding: 8px 16px;
-                                        border-radius: 8px;
-                                        font-size: 14px;
-                                        font-weight: 600;
-                                        cursor: pointer;
-                                        transition: all 0.2s ease;
-                                        display: flex;
-                                        align-items: center;
-                                        gap: 6px;
-                                    "
-                                    onmouseover="this.style.background='rgba(255,107,107,0.1)';"
-                                    onmouseout="this.style.background='transparent';">
-                                        <span style="font-size: 16px;">🗑️</span>
-                                        Удалить
-                                    </button>
-                                </div>
+                        <!-- Нижний блок с редактированием и удалением -->
+                        <div style="display: flex; flex-direction: column; gap: 12px; padding-top: 12px; border-top: 1px solid var(--border-light);">
+                            <div style="display: flex; gap: 8px;">
+                                <button onclick="window.healthFlow.editWorkout(${workout.id})" style="
+                                    background: transparent;
+                                    border: 2px solid var(--primary);
+                                    color: var(--primary);
+                                    padding: 10px 16px;
+                                    border-radius: 8px;
+                                    font-size: 14px;
+                                    font-weight: 600;
+                                    cursor: pointer;
+                                    transition: all 0.2s ease;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    gap: 6px;
+                                    flex: 1;
+                                "
+                                onmouseover="this.style.background='rgba(6,180,143,0.1)'; this.style.transform='translateY(-2px)';"
+                                onmouseout="this.style.background='transparent'; this.style.transform='translateY(0)';">
+                                    <span style="font-size: 16px;">✏️</span>
+                                    Редактировать
+                                </button>
                                 
-                                <div style="display: flex; justify-content: flex-end;">
-                                    <div style="font-size: 13px; color: var(--text-light); background: rgba(0, 0, 0, 0.03); padding: 6px 12px; border-radius: 8px;">
-                                        📅 Последнее: ${completed}
-                                    </div>
+                                <button onclick="window.healthFlow.deleteWorkout(${workout.id})" style="
+                                    background: transparent;
+                                    border: 2px solid var(--remove);
+                                    color: var(--remove);
+                                    padding: 10px 16px;
+                                    border-radius: 8px;
+                                    font-size: 14px;
+                                    font-weight: 600;
+                                    cursor: pointer;
+                                    transition: all 0.2s ease;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    gap: 6px;
+                                    flex: 1;
+                                "
+                                onmouseover="this.style.background='rgba(255,107,107,0.1)'; this.style.transform='translateY(-2px)';"
+                                onmouseout="this.style.background='transparent'; this.style.transform='translateY(0)';">
+                                    <span style="font-size: 16px;">🗑️</span>
+                                    Удалить
+                                </button>
+                            </div>
+                            
+                            <div style="text-align: center;">
+                                <div style="
+                                    font-size: 13px;
+                                    color: var(--text-light);
+                                    background: rgba(0, 0, 0, 0.03);
+                                    padding: 8px 16px;
+                                    border-radius: 8px;
+                                    display: inline-block;
+                                ">
+                                    📅 Последнее: ${completed}
                                 </div>
                             </div>
+                        </div>
                     </div>
                 </div>
             `;
