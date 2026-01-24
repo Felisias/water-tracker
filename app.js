@@ -610,131 +610,134 @@ class HealthFlowApp {
 
         filteredExercises.forEach((exercise, index) => {
             html += `
-                    <div style="
-                        background: var(--surface);
-                        border: 2px solid var(--border-light);
-                        border-radius: 12px;
-                        padding: 16px;
-                        opacity: 0;
-                        animation: fadeIn 0.3s ease-out ${index * 0.1}s forwards;
-                        transition: all 0.2s ease;
-                    ">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
-                            <div style="flex: 1;">
-                                <div style="font-weight: 700; color: var(--text-primary); font-size: 17px; margin-bottom: 4px;">
-                                    ${exercise.name}
-                                </div>
-                                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                                    <span style="
-                                        background: rgba(6, 180, 143, 0.1);
-                                        color: var(--primary);
-                                        padding: 4px 10px;
-                                        border-radius: 10px;
-                                        font-size: 12px;
-                                        font-weight: 600;
-                                    ">
-                                        ${exercise.category}
-                                    </span>
-                                    ${exercise.muscleGroups && exercise.muscleGroups.map(group => `
-                                        <span style="
-                                            background: rgba(108, 92, 231, 0.1);
-                                            color: #6C5CE7;
-                                            padding: 4px 10px;
-                                            border-radius: 10px;
-                                            font-size: 12px;
-                                            font-weight: 600;
-                                        ">
-                                            ${group}
-                                        </span>
-                                    `).join('')}
-                                    <span style="
-                                        background: rgba(255, 154, 118, 0.1);
-                                        color: var(--accent);
-                                        padding: 4px 10px;
-                                        border-radius: 10px;
-                                        font-size: 12px;
-                                        font-weight: 600;
-                                    ">
-                                        ${exercise.difficulty}
-                                    </span>
-                                </div>
+                <div style="
+                    background: var(--surface);
+                    border: 2px solid var(--border-light);
+                    border-radius: 12px;
+                    padding: 16px;
+                    opacity: 0;
+                    animation: fadeIn 0.3s ease-out ${index * 0.1}s forwards;
+                    transition: all 0.2s ease;
+                ">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 700; color: var(--text-primary); font-size: 17px; margin-bottom: 4px;">
+                                ${exercise.name}
                             </div>
-                        </div>
-                        
-                        ${exercise.description ? `
-                            <div style="
-                                color: var(--text-secondary);
-                                font-size: 14px;
-                                line-height: 1.5;
-                                padding: 12px;
-                                background: rgba(0, 0, 0, 0.02);
-                                border-radius: 8px;
-                                margin-top: 10px;
-                                margin-bottom: 12px;
-                            ">
-                                ${exercise.description}
-                            </div>
-                        ` : ''}
-                        
-                        ${exercise.image ? `
-                            <div style="margin-top: 12px; margin-bottom: 12px;">
-                                <img src="${exercise.image}" alt="${exercise.name}" style="
-                                    width: 100%;
-                                    max-height: 200px;
-                                    object-fit: cover;
-                                    border-radius: 8px;
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
+                                <span style="
+                                    background: rgba(6, 180, 143, 0.1);
+                                    color: var(--primary);
+                                    padding: 4px 10px;
+                                    border-radius: 10px;
+                                    font-size: 12px;
+                                    font-weight: 600;
                                 ">
+                                    ${exercise.category}
+                                </span>
+                                ${exercise.muscleGroups && exercise.muscleGroups.map(group => `
+                                    <span style="
+                                        background: rgba(108, 92, 231, 0.1);
+                                        color: #6C5CE7;
+                                        padding: 4px 10px;
+                                        border-radius: 10px;
+                                        font-size: 12px;
+                                        font-weight: 600;
+                                        white-space: nowrap;
+                                    ">
+                                        ${group}
+                                    </span>
+                                `).join('')}
                             </div>
-                        ` : ''}
-                        
-                        <!-- Кнопки редактирования и удаления -->
-                        <div style="display: flex; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border-light);">
-                            <button onclick="window.healthFlow.editExercise(${exercise.id})" style="
-                                flex: 1;
-                                background: transparent;
-                                border: 2px solid var(--primary);
-                                color: var(--primary);
-                                padding: 10px;
-                                border-radius: 8px;
-                                font-size: 14px;
-                                font-weight: 600;
-                                cursor: pointer;
-                                transition: all 0.2s ease;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                gap: 6px;
-                            "
-                            onmouseover="this.style.background='rgba(6,180,143,0.1)';"
-                            onmouseout="this.style.background='transparent';">
-                                <span style="font-size: 16px;">✏️</span>
-                                Редактировать
-                            </button>
-                            
-                            <button onclick="window.healthFlow.deleteExercise(${exercise.id})" style="
-                                flex: 1;
-                                background: transparent;
-                                border: 2px solid var(--remove);
-                                color: var(--remove);
-                                padding: 10px;
-                                border-radius: 8px;
-                                font-size: 14px;
-                                font-weight: 600;
-                                cursor: pointer;
-                                transition: all 0.2s ease;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                gap: 6px;
-                            "
-                            onmouseover="this.style.background='rgba(255,107,107,0.1)';"
-                            onmouseout="this.style.background='transparent';">
-                                <span style="font-size: 16px;">🗑️</span>
-                                Удалить
-                            </button>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <span style="
+                                    background: rgba(255, 154, 118, 0.1);
+                                    color: var(--accent);
+                                    padding: 4px 10px;
+                                    border-radius: 10px;
+                                    font-size: 12px;
+                                    font-weight: 600;
+                                ">
+                                    ${exercise.difficulty}
+                                </span>
+                            </div>
                         </div>
                     </div>
-                `;
+                    
+                    ${exercise.description ? `
+                        <div style="
+                            color: var(--text-secondary);
+                            font-size: 14px;
+                            line-height: 1.5;
+                            padding: 12px;
+                            background: rgba(0, 0, 0, 0.02);
+                            border-radius: 8px;
+                            margin-top: 10px;
+                            margin-bottom: 12px;
+                        ">
+                            ${exercise.description}
+                        </div>
+                    ` : ''}
+                    
+                    ${exercise.image ? `
+                        <div style="margin-top: 12px; margin-bottom: 12px;">
+                            <img src="${exercise.image}" alt="${exercise.name}" style="
+                                width: 100%;
+                                max-height: 200px;
+                                object-fit: cover;
+                                border-radius: 8px;
+                            ">
+                        </div>
+                    ` : ''}
+                    
+                    <!-- Кнопки редактирования и удаления -->
+                    <div style="display: flex; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border-light);">
+                        <button onclick="window.healthFlow.editExercise(${exercise.id})" style="
+                            flex: 1;
+                            background: transparent;
+                            border: 2px solid var(--primary);
+                            color: var(--primary);
+                            padding: 10px;
+                            border-radius: 8px;
+                            font-size: 14px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            transition: all 0.2s ease;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 6px;
+                        "
+                        onmouseover="this.style.background='rgba(6,180,143,0.1)';"
+                        onmouseout="this.style.background='transparent';">
+                            <span style="font-size: 16px;">✏️</span>
+                            Редактировать
+                        </button>
+                        
+                        <button onclick="window.healthFlow.deleteExercise(${exercise.id})" style="
+                            flex: 1;
+                            background: transparent;
+                            border: 2px solid var(--remove);
+                            color: var(--remove);
+                            padding: 10px;
+                            border-radius: 8px;
+                            font-size: 14px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            transition: all 0.2s ease;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 6px;
+                        "
+                        onmouseover="this.style.background='rgba(255,107,107,0.1)';"
+                        onmouseout="this.style.background='transparent';">
+                            <span style="font-size: 16px;">🗑️</span>
+                            Удалить
+                        </button>
+                    </div>
+                </div>
+            `;
         });
 
         html += '</div>';
@@ -1607,12 +1610,20 @@ class HealthFlowApp {
             <!-- Информация о тренировке -->
             <div style="
                 background: var(--surface);
-                border-radius: 12px;
-                border: 2px solid ${this.currentWorkoutData.color};
-                padding: 16px;
-                margin-bottom: 20px;
-                border-left: 6px solid ${this.currentWorkoutData.color};
+                border: 2px solid ${workout.lastCompleted ? workout.color : 'var(--border-light)'};
+                border-radius: 14px;
+                padding: 0;
+                opacity: 0;
+                animation: fadeIn 0.3s ease-out ${index * 0.1}s forwards;
+                transition: all 0.2s ease;
+                overflow: hidden;
+                border-left: 8px solid ${workout.color};
+                border-top: 2px solid ${workout.lastCompleted ? workout.color : 'var(--border-light)'};
             ">
+
+                <!-- Основной контент -->
+                <div style="padding: 18px;">
+
                 <div style="font-weight: 700; color: var(--text-primary); font-size: 18px; margin-bottom: 6px;">
                     ${this.currentWorkoutData.name}
                 </div>
@@ -1791,27 +1802,28 @@ class HealthFlowApp {
                             ">
                                 ${exercise.category}
                             </span>
-                            ${exercise.muscleGroups && exercise.muscleGroups.slice(0, 2).map(group => `
+                            ${exercise.muscleGroups && exercise.muscleGroups.map(group => `
                                 <span style="
                                     background: rgba(108, 92, 231, 0.1);
                                     color: #6C5CE7;
-                                    padding: 3px 8px;
-                                    border-radius: 8px;
+                                    padding: 2px 8px;
+                                    border-radius: 10px;
                                     font-size: 11px;
                                     font-weight: 600;
+                                    white-space: nowrap;
                                 ">
                                     ${group}
                                 </span>
                             `).join('')}
                         </div>
-                        
+
                         <!-- Отдых между подходами -->
                         <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
                             <div style="font-size: 12px; color: var(--text-secondary); font-weight: 600;">
                                 Отдых между подходами:
                             </div>
-                            <input type="number" 
-                                   class="exercise-rest-input" 
+                            <input type="number"
+                                   class="exercise-rest-input"
                                    data-exercise-index="${exerciseIndex}"
                                    value="${exercise.restBetweenSets || 60}" 
                                    min="0" 
@@ -2422,14 +2434,15 @@ class HealthFlowApp {
                                         ">
                                             ${exercise.category}
                                         </span>
-                                        ${exercise.muscleGroups && exercise.muscleGroups.slice(0, 2).map(group => `
-                                            <span style="
+                                        ${exercise.muscleGroups && exercise.muscleGroups.map(group => `
+                                             <span style="
                                                 background: rgba(108, 92, 231, 0.1);
                                                 color: #6C5CE7;
-                                                padding: 2px 8px;
-                                                border-radius: 10px;
+                                                padding: 3px 8px;
+                                                border-radius: 8px;
                                                 font-size: 11px;
                                                 font-weight: 600;
+                                                white-space: nowrap;
                                             ">
                                                 ${group}
                                             </span>
@@ -3116,22 +3129,18 @@ class HealthFlowApp {
                 <div style="
                     background: var(--surface);
                     border: 2px solid ${workout.lastCompleted ? workout.color : 'var(--border-light)'};
-                    border-radius: 14px;
-                    padding: 0;
-                    opacity: 0;
-                    animation: fadeIn 0.3s ease-out ${index * 0.1}s forwards;
-                    transition: all 0.2s ease;
-                    overflow: hidden;
-                ">
-                    <!-- Верхняя полоса цвета -->
-                    <div style="
-                        height: 6px;
-                        background: ${workout.color};
-                        width: 100%;
-                    "></div>
-                    
-                    <!-- Основной контент -->
-                    <div style="padding: 18px;">
+                border-radius: 14px;
+                padding: 0;
+                opacity: 0;
+                animation: fadeIn 0.3s ease-out ${index * 0.1}s forwards;
+                transition: all 0.2s ease;
+                overflow: hidden;
+                border-left: 8px solid ${workout.color};
+                border-top: 2px solid ${workout.lastCompleted ? workout.color : 'var(--border-light)'};
+            ">
+
+                <!-- Основной контент -->
+                <div style="padding: 18px;">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
                             <div style="flex: 1;">
                                 <div style="font-weight: 800; color: var(--text-primary); font-size: 18px; margin-bottom: 8px;">
@@ -3238,25 +3247,25 @@ class HealthFlowApp {
                                 
                                 <button onclick="window.healthFlow.deleteWorkout(${workout.id})" style="
                                     background: transparent;
-                                    border: 2px solid var(--remove);
-                                    color: var(--remove);
-                                    padding: 8px 16px;
-                                    border-radius: 8px;
-                                    font-size: 14px;
-                                    font-weight: 600;
+                                    border: none;
+                                    color: var(--text-secondary);
+                                    padding: 8px;
+                                    font-size: 18px;
                                     cursor: pointer;
                                     transition: all 0.2s ease;
+                                    width: 36px;
+                                    height: 36px;
                                     display: flex;
                                     align-items: center;
-                                    gap: 6px;
+                                    justify-content: center;
+                                    border-radius: 50%;
                                 "
-                                onmouseover="this.style.background='rgba(255,107,107,0.1)';"
-                                onmouseout="this.style.background='transparent';">
-                                    <span style="font-size: 16px;">🗑️</span>
-                                    Удалить
+                                onmouseover="this.style.background='rgba(255,107,107,0.1)'; this.style.color='var(--remove)';"
+                                onmouseout="this.style.background='transparent'; this.style.color='var(--text-secondary)';">
+                                    ❌
                                 </button>
                             </div>
-                            
+
                             <div style="font-size: 13px; color: var(--text-light);">
                                 📅 ${completed}
                             </div>
