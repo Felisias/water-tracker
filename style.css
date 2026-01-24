@@ -361,3 +361,17 @@ body {
         height: 40px;
     }
 }
+
+
+
+/* Стили для упражнений (импортируются отдельно, но дублируем основные) */
+.section-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+
+
+
+
