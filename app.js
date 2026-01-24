@@ -1,3 +1,4 @@
+[file name]: app.js (полная версия с изменениями)
 // Главное приложение HealthFlow
 class HealthFlowApp {
     constructor() {
@@ -88,7 +89,12 @@ class HealthFlowApp {
             // Для модуля воды загружаем отдельно
             if (pageId === 'water') {
                 await this.loadWaterPage(container);
-            } else {
+            } 
+            // Для модуля тренировок загружаем отдельно
+            else if (pageId === 'workouts') {
+                await this.loadWorkoutsPage(container);
+            } 
+            else {
                 // Для других страниц показываем заглушки
                 container.innerHTML = this.getPageStub(pageId);
             }
@@ -110,6 +116,11 @@ class HealthFlowApp {
         await this.loadWaterModule();
     }
     
+    async loadWorkoutsPage(container) {
+        // Загружаем модуль тренировок
+        await this.loadWorkoutsModule();
+    }
+    
     async loadWaterModule() {
         try {
             // Загружаем модуль воды
@@ -122,6 +133,21 @@ class HealthFlowApp {
             }
         } catch (error) {
             console.error('❌ Ошибка загрузки модуля воды:', error);
+        }
+    }
+    
+    async loadWorkoutsModule() {
+        try {
+            // Загружаем модуль тренировок
+            const module = await import('./workouts.js');
+            
+            // Инициализируем модуль
+            if (module && module.init) {
+                await module.init(this);
+                console.log('✅ Модуль тренировок загружен');
+            }
+        } catch (error) {
+            console.error('❌ Ошибка загрузки модуля тренировок:', error);
         }
     }
     
