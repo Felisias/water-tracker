@@ -1,4 +1,4 @@
-[file name]: app.js (полная версия с изменениями)
+[file name]: app.js
 // Главное приложение HealthFlow
 class HealthFlowApp {
     constructor() {
@@ -6,12 +6,6 @@ class HealthFlowApp {
             currentPage: 'water',
             totalSkins: 0,
             theme: 'cozy'
-        };
-        
-        this.pages = {
-            water: null,
-            workouts: null,
-            profile: null
         };
     }
     
@@ -30,9 +24,6 @@ class HealthFlowApp {
         // Настраиваем навигацию
         this.setupNavigation();
         
-        // Настраиваем Service Worker
-        this.setupServiceWorker();
-        
         console.log('✅ HealthFlow запущен');
     }
     
@@ -48,7 +39,7 @@ class HealthFlowApp {
         
         // Загружаем последнюю страницу
         const savedPage = localStorage.getItem('healthflow_page');
-        if (savedPage && this.pages[savedPage]) {
+        if (savedPage && ['water', 'workouts', 'profile'].includes(savedPage)) {
             this.state.currentPage = savedPage;
         }
     }
@@ -86,133 +77,186 @@ class HealthFlowApp {
         const container = document.getElementById('currentPage');
         
         try {
-            // Для модуля воды загружаем отдельно
             if (pageId === 'water') {
                 await this.loadWaterPage(container);
             } 
-            // Для модуля тренировок загружаем отдельно
             else if (pageId === 'workouts') {
                 await this.loadWorkoutsPage(container);
             } 
-            else {
-                // Для других страниц показываем заглушки
-                container.innerHTML = this.getPageStub(pageId);
+            else if (pageId === 'profile') {
+                this.loadProfilePage(container);
             }
         } catch (error) {
             console.error(`❌ Ошибка загрузки страницы ${pageId}:`, error);
-            container.innerHTML = `<div class="error-message">Ошибка загрузки страницы</div>`;
+            container.innerHTML = `<div class="error-message" style="padding: 40px; text-align: center;">Ошибка загрузки страницы</div>`;
         }
     }
     
     async loadWaterPage(container) {
-        // Загружаем HTML модуля воды
-        const response = await fetch('water.html');
-        const html = await response.text();
-        
-        // Вставляем HTML
-        container.innerHTML = html;
-        
-        // Загружаем и инициализируем JS модуля воды
-        await this.loadWaterModule();
+        try {
+            // Загружаем модуль воды из отдельного файла
+            const response = await fetch('water.html');
+            const html = await response.text();
+            container.innerHTML = html;
+            
+            // Загружаем и выполняем water.js
+            const scriptResponse = await fetch('water.js');
+            const scriptText = await scriptResponse.text();
+            
+            // Создаем глобальную переменную для водного трекера
+            const script = document.createElement('script');
+            script.textContent = `
+                // Создаем и инициализируем WaterTracker
+                window.waterTracker = new WaterTracker();
+                window.waterTracker.init();
+                
+                // Экспортируем функции для глобального использования
+                window.addWater = function(amount) {
+                    if (window.waterTracker) {
+                        window.waterTracker.addWater(amount);
+                    }
+                };
+                
+                window.removeWater = function(amount) {
+                    if (window.waterTracker) {
+                        window.waterTracker.removeWater(amount);
+                    }
+                };
+            `;
+            
+            // Добавляем исходный код water.js
+            const originalScript = document.createElement('script');
+            originalScript.textContent = scriptText;
+            
+            document.head.appendChild(originalScript);
+            document.head.appendChild(script);
+            
+        } catch (error) {
+            console.error('❌ Ошибка загрузки модуля воды:', error);
+            container.innerHTML = this.getWaterFallback();
+        }
+    }
+    
+    getWaterFallback() {
+        return `
+            <header class="page-header">
+                <h1 class="page-title">Вода</h1>
+                <div class="page-controls">
+                    <div class="skin-counter">
+                        ✨ <span id="skinCount">${this.state.totalSkins}</span>
+                    </div>
+                    <button class="theme-toggle" onclick="window.healthFlow.toggleTheme()">
+                        <div class="theme-icon">🌙</div>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="content-container">
+                <div style="text-align: center; padding: 60px 20px;">
+                    <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;">💧</div>
+                    <h2 style="font-size: 1.5rem; margin-bottom: 10px; color: var(--text-primary);">
+                        Модуль воды
+                    </h2>
+                    <p style="color: var(--text-secondary); line-height: 1.5;">
+                        Загрузка модуля воды...
+                    </p>
+                </div>
+            </div>
+        `;
     }
     
     async loadWorkoutsPage(container) {
-        // Загружаем модуль тренировок
-        await this.loadWorkoutsModule();
-    }
-    
-    async loadWaterModule() {
-        try {
-            // Загружаем модуль воды
-            const module = await import('./water.js');
-            
-            // Инициализируем модуль
-            if (module && module.init) {
-                await module.init(this);
-                console.log('✅ Модуль воды загружен');
-            }
-        } catch (error) {
-            console.error('❌ Ошибка загрузки модуля воды:', error);
-        }
-    }
-    
-    async loadWorkoutsModule() {
         try {
             // Загружаем модуль тренировок
-            const module = await import('./workouts.js');
+            const response = await fetch('workouts.html');
+            if (!response.ok) throw new Error('Файл не найден');
+            const html = await response.text();
+            container.innerHTML = html;
             
-            // Инициализируем модуль
-            if (module && module.init) {
-                await module.init(this);
-                console.log('✅ Модуль тренировок загружен');
-            }
+            // Загружаем workouts.js
+            const scriptResponse = await fetch('workouts.js');
+            const scriptText = await scriptResponse.text();
+            
+            // Исполняем workouts.js
+            const script = document.createElement('script');
+            script.textContent = scriptText;
+            
+            // Добавляем инициализацию после загрузки DOM
+            script.onload = () => {
+                if (window.workoutsManager) {
+                    window.workoutsManager.init();
+                }
+            };
+            
+            document.head.appendChild(script);
+            
         } catch (error) {
             console.error('❌ Ошибка загрузки модуля тренировок:', error);
+            container.innerHTML = this.getWorkoutsFallback();
         }
     }
     
-    getPageStub(pageId) {
-        const stubs = {
-            workouts: `
-                <header class="page-header">
-                    <h1 class="page-title">Тренировки</h1>
-                    <div class="page-controls">
-                        <div class="skin-counter">
-                            ✨ <span>${this.state.totalSkins}</span>
-                        </div>
-                        <button class="theme-toggle" onclick="window.healthFlow.toggleTheme()">
-                            <div class="theme-icon">${this.state.theme === 'cozy' ? '🌙' : '☀️'}</div>
-                        </button>
+    getWorkoutsFallback() {
+        return `
+            <header class="page-header">
+                <h1 class="page-title">Тренировки</h1>
+                <div class="page-controls">
+                    <div class="skin-counter">
+                        ✨ <span>${this.state.totalSkins}</span>
                     </div>
-                </header>
-                <div class="content-container">
-                    <div style="text-align: center; padding: 60px 20px;">
-                        <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;">🏋️</div>
-                        <h2 style="font-size: 1.5rem; margin-bottom: 10px; color: var(--text-primary);">
-                            Модуль тренировок
-                        </h2>
-                        <p style="color: var(--text-secondary); line-height: 1.5;">
-                            Скоро здесь появится система тренировок!
-                        </p>
+                    <button class="theme-toggle" onclick="window.healthFlow.toggleTheme()">
+                        <div class="theme-icon">🌙</div>
+                    </button>
+                </div>
+            </header>
+            <div class="content-container">
+                <div style="text-align: center; padding: 60px 20px;">
+                    <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;">🏋️</div>
+                    <h2 style="font-size: 1.5rem; margin-bottom: 10px; color: var(--text-primary);">
+                        Модуль тренировок
+                    </h2>
+                    <p style="color: var(--text-secondary); line-height: 1.5;">
+                        Скоро здесь появится система тренировок!
+                    </p>
+                </div>
+            </div>
+        `;
+    }
+    
+    loadProfilePage(container) {
+        container.innerHTML = `
+            <header class="page-header">
+                <h1 class="page-title">Профиль</h1>
+                <div class="page-controls">
+                    <div class="skin-counter">
+                        ✨ <span>${this.state.totalSkins}</span>
+                    </div>
+                    <button class="theme-toggle" onclick="window.healthFlow.toggleTheme()">
+                        <div class="theme-icon">🌙</div>
+                    </button>
+                </div>
+            </header>
+            <div class="content-container">
+                <div style="text-align: center; padding: 60px 20px;">
+                    <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;">👤</div>
+                    <h2 style="font-size: 1.5rem; margin-bottom: 10px; color: var(--text-primary);">
+                        Профиль
+                    </h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 30px;">
+                        Здесь будет твоя статистика
+                    </p>
+                    
+                    <div style="background: var(--surface); border-radius: var(--radius); padding: 24px; border: 2px solid var(--border-light); margin-bottom: 20px;">
+                        <div style="font-size: 3rem; font-weight: 800; color: var(--primary); margin-bottom: 10px;">
+                            ${this.state.totalSkins}
+                        </div>
+                        <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                            Всего скинтов
+                        </div>
                     </div>
                 </div>
-            `,
-            profile: `
-                <header class="page-header">
-                    <h1 class="page-title">Профиль</h1>
-                    <div class="page-controls">
-                        <div class="skin-counter">
-                            ✨ <span>${this.state.totalSkins}</span>
-                        </div>
-                        <button class="theme-toggle" onclick="window.healthFlow.toggleTheme()">
-                            <div class="theme-icon">${this.state.theme === 'cozy' ? '🌙' : '☀️'}</div>
-                        </button>
-                    </div>
-                </header>
-                <div class="content-container">
-                    <div style="text-align: center; padding: 60px 20px;">
-                        <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;">👤</div>
-                        <h2 style="font-size: 1.5rem; margin-bottom: 10px; color: var(--text-primary);">
-                            Профиль
-                        </h2>
-                        <p style="color: var(--text-secondary); margin-bottom: 30px;">
-                            Здесь будет твоя статистика
-                        </p>
-                        
-                        <div style="background: var(--surface); border-radius: var(--radius); padding: 24px; border: 2px solid var(--border-light); margin-bottom: 20px;">
-                            <div style="font-size: 3rem; font-weight: 800; color: var(--primary); margin-bottom: 10px;">
-                                ${this.state.totalSkins}
-                            </div>
-                            <div style="color: var(--text-secondary); font-size: 0.9rem;">
-                                Всего скинтов
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `
-        };
-        
-        return stubs[pageId] || `<div>Страница не найдена</div>`;
+            </div>
+        `;
     }
     
     updateNavigation(pageId) {
@@ -243,7 +287,7 @@ class HealthFlowApp {
         // Обработка hash в URL
         window.addEventListener('hashchange', () => {
             const hash = window.location.hash.substring(1);
-            if (hash && hash !== this.state.currentPage && this.pages[hash]) {
+            if (hash && hash !== this.state.currentPage && ['water', 'workouts', 'profile'].includes(hash)) {
                 this.loadPage(hash);
             }
         });
@@ -299,18 +343,6 @@ class HealthFlowApp {
         setTimeout(() => {
             notification.classList.remove('show');
         }, 3000);
-    }
-    
-    setupServiceWorker() {
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
-                .then(registration => {
-                    console.log('✅ ServiceWorker зарегистрирован:', registration.scope);
-                })
-                .catch(error => {
-                    console.log('❌ ServiceWorker ошибка:', error);
-                });
-        }
     }
 }
 
