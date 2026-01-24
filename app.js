@@ -88,9 +88,13 @@ class HealthFlowApp {
             if (pageId === 'water') {
                 await this.loadWaterPage(container);
             } else if (pageId === 'workouts') {
-                await this.loadWorkoutsPage(container); // ИЗМЕНЕНИЕ ЗДЕСЬ
+                // Вставляем HTML тренировок напрямую
+                container.innerHTML = this.getWorkoutsPage();
+                this.initializeWorkouts();
+            } else if (pageId === 'profile') {
+                container.innerHTML = this.getProfilePage();
             } else {
-                container.innerHTML = this.getPageStub(pageId);
+                container.innerHTML = `<div>Страница не найдена</div>`;
             }
         } catch (error) {
             console.error(`❌ Ошибка загрузки страницы ${pageId}:`, error);
@@ -125,68 +129,252 @@ class HealthFlowApp {
         }
     }
     
-    getPageStub(pageId) {
-        const stubs = {
-            workouts: `
-                <header class="page-header">
-                    <h1 class="page-title">Тренировки</h1>
-                    <div class="page-controls">
-                        <div class="skin-counter">
-                            ✨ <span>${this.state.totalSkins}</span>
-                        </div>
-                        <button class="theme-toggle" onclick="window.healthFlow.toggleTheme()">
-                            <div class="theme-icon">${this.state.theme === 'cozy' ? '🌙' : '☀️'}</div>
-                        </button>
+    // Метод для получения HTML тренировок
+    getWorkoutsPage() {
+        return `
+            <header class="page-header">
+                <h1 class="page-title">Тренировки</h1>
+                <div class="page-controls">
+                    <div class="skin-counter">
+                        ✨ <span>${this.state.totalSkins}</span>
                     </div>
-                </header>
-                <div class="content-container">
-                    <div style="text-align: center; padding: 60px 20px;">
-                        <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;">🏋️</div>
-                        <h2 style="font-size: 1.5rem; margin-bottom: 10px; color: var(--text-primary);">
-                            Модуль тренировок
-                        </h2>
-                        <p style="color: var(--text-secondary); line-height: 1.5;">
-                            Скоро здесь появится система тренировок!
-                        </p>
+                    <button class="theme-toggle" onclick="window.healthFlow.toggleTheme()">
+                        <div class="theme-icon">${this.state.theme === 'cozy' ? '🌙' : '☀️'}</div>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="content-container">
+                <div style="text-align: center; padding: 40px 20px;">
+                    <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;">🏋️</div>
+                    <h2 style="font-size: 1.5rem; margin-bottom: 10px; color: var(--text-primary);">
+                        Тренировки
+                    </h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 30px; line-height: 1.5;">
+                        Здесь ты сможешь создавать и отслеживать свои тренировки
+                    </p>
+                    
+                    <!-- Кнопка создания упражнения -->
+                    <button id="createExerciseBtn" style="
+                        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+                        border: none;
+                        border-radius: var(--radius);
+                        padding: 16px 32px;
+                        color: white;
+                        font-weight: 700;
+                        font-size: 1rem;
+                        cursor: pointer;
+                        margin-bottom: 20px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 10px;
+                        width: 100%;
+                        transition: var(--transition);
+                    ">
+                        <span style="font-size: 1.2rem;">+</span>
+                        Создать упражнение
+                    </button>
+                    
+                    <!-- Список упражнений -->
+                    <div id="exercisesList" style="
+                        background: var(--surface);
+                        border-radius: var(--radius);
+                        border: 2px solid var(--border-light);
+                        min-height: 200px;
+                        padding: 20px;
+                        margin-top: 20px;
+                    ">
+                        <div style="text-align: center; padding: 40px 20px;">
+                            <div style="font-size: 2rem; opacity: 0.3; margin-bottom: 10px;">📝</div>
+                            <div style="color: var(--text-secondary);">Упражнения появятся здесь</div>
+                        </div>
                     </div>
                 </div>
-            `,
-            profile: `
-                <header class="page-header">
-                    <h1 class="page-title">Профиль</h1>
-                    <div class="page-controls">
-                        <div class="skin-counter">
-                            ✨ <span>${this.state.totalSkins}</span>
-                        </div>
-                        <button class="theme-toggle" onclick="window.healthFlow.toggleTheme()">
-                            <div class="theme-icon">${this.state.theme === 'cozy' ? '🌙' : '☀️'}</div>
-                        </button>
+            </div>
+        `;
+    }
+    
+    // Метод для получения HTML профиля
+    getProfilePage() {
+        return `
+            <header class="page-header">
+                <h1 class="page-title">Профиль</h1>
+                <div class="page-controls">
+                    <div class="skin-counter">
+                        ✨ <span>${this.state.totalSkins}</span>
                     </div>
-                </header>
-                <div class="content-container">
-                    <div style="text-align: center; padding: 60px 20px;">
-                        <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;">👤</div>
-                        <h2 style="font-size: 1.5rem; margin-bottom: 10px; color: var(--text-primary);">
-                            Профиль
-                        </h2>
-                        <p style="color: var(--text-secondary); margin-bottom: 30px;">
-                            Здесь будет твоя статистика
-                        </p>
-                        
-                        <div style="background: var(--surface); border-radius: var(--radius); padding: 24px; border: 2px solid var(--border-light); margin-bottom: 20px;">
-                            <div style="font-size: 3rem; font-weight: 800; color: var(--primary); margin-bottom: 10px;">
-                                ${this.state.totalSkins}
-                            </div>
-                            <div style="color: var(--text-secondary); font-size: 0.9rem;">
-                                Всего скинтов
-                            </div>
+                    <button class="theme-toggle" onclick="window.healthFlow.toggleTheme()">
+                        <div class="theme-icon">${this.state.theme === 'cozy' ? '🌙' : '☀️'}</div>
+                    </button>
+                </div>
+            </header>
+            <div class="content-container">
+                <div style="text-align: center; padding: 60px 20px;">
+                    <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;">👤</div>
+                    <h2 style="font-size: 1.5rem; margin-bottom: 10px; color: var(--text-primary);">
+                        Профиль
+                    </h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 30px;">
+                        Здесь будет твоя статистика
+                    </p>
+                    
+                    <div style="background: var(--surface); border-radius: var(--radius); padding: 24px; border: 2px solid var(--border-light); margin-bottom: 20px;">
+                        <div style="font-size: 3rem; font-weight: 800; color: var(--primary); margin-bottom: 10px;">
+                            ${this.state.totalSkins}
+                        </div>
+                        <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                            Всего скинтов
                         </div>
                     </div>
                 </div>
-            `
-        };
+            </div>
+        `;
+    }
+    
+    // Метод для инициализации функционала тренировок
+    initializeWorkouts() {
+        console.log('Инициализация тренировок...');
         
-        return stubs[pageId] || `<div>Страница не найдена</div>`;
+        const createBtn = document.getElementById('createExerciseBtn');
+        if (createBtn) {
+            createBtn.addEventListener('click', () => {
+                this.createExercise();
+            });
+        }
+        
+        this.loadExercises();
+    }
+    
+    // Метод создания упражнения
+    createExercise() {
+        const name = prompt('Введите название упражнения:');
+        if (!name || !name.trim()) return;
+        
+        const category = prompt('Выберите категорию (Кардио, Силовые, Растяжка, Йога, Другое):', 'Кардио');
+        const description = prompt('Описание (необязательно):', '');
+        
+        this.saveExercise({
+            name: name.trim(),
+            category: category || 'Кардио',
+            description: description || '',
+            difficulty: 'Средний',
+            createdAt: new Date().toISOString()
+        });
+        
+        this.showNotification(`Упражнение "${name}" создано!`, 'success');
+        this.loadExercises();
+    }
+    
+    // Метод сохранения упражнения
+    saveExercise(exercise) {
+        let exercises = JSON.parse(localStorage.getItem('healthflow_exercises') || '[]');
+        exercise.id = Date.now();
+        exercises.push(exercise);
+        localStorage.setItem('healthflow_exercises', JSON.stringify(exercises));
+    }
+    
+    // Метод загрузки упражнений
+    loadExercises() {
+        const container = document.getElementById('exercisesList');
+        if (!container) return;
+        
+        const exercises = JSON.parse(localStorage.getItem('healthflow_exercises') || '[]');
+        
+        if (exercises.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px 20px;">
+                    <div style="font-size: 2rem; opacity: 0.3; margin-bottom: 10px;">📝</div>
+                    <div style="color: var(--text-secondary);">Упражнений пока нет</div>
+                    <div style="color: var(--text-light); font-size: 0.9rem; margin-top: 5px;">Создайте первое упражнение!</div>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '<div style="margin-bottom: 15px; font-weight: 700; color: var(--text-primary);">Мои упражнения:</div>';
+        
+        exercises.forEach((exercise, index) => {
+            html += `
+                <div style="
+                    background: var(--surface);
+                    border: 1px solid var(--border-light);
+                    border-radius: var(--radius-sm);
+                    padding: 15px;
+                    margin-bottom: 10px;
+                    animation: fadeIn 0.3s ease-out ${index * 0.1}s both;
+                ">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                        <div style="font-weight: 700; color: var(--text-primary); font-size: 1.1rem;">
+                            ${exercise.name}
+                        </div>
+                        <button onclick="window.healthFlow.deleteExercise(${exercise.id})" style="
+                            background: rgba(255, 107, 107, 0.1);
+                            border: none;
+                            color: var(--remove);
+                            padding: 4px 10px;
+                            border-radius: 12px;
+                            font-size: 0.85rem;
+                            cursor: pointer;
+                        ">
+                            Удалить
+                        </button>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-bottom: 8px;">
+                        <span style="
+                            background: rgba(6, 180, 143, 0.1);
+                            color: var(--primary);
+                            padding: 3px 8px;
+                            border-radius: 10px;
+                            font-size: 0.8rem;
+                            font-weight: 600;
+                        ">
+                            ${exercise.category}
+                        </span>
+                        
+                        <span style="
+                            background: rgba(255, 154, 118, 0.1);
+                            color: var(--accent);
+                            padding: 3px 8px;
+                            border-radius: 10px;
+                            font-size: 0.8rem;
+                            font-weight: 600;
+                        ">
+                            ${exercise.difficulty}
+                        </span>
+                    </div>
+                    
+                    ${exercise.description ? `
+                        <div style="
+                            color: var(--text-secondary);
+                            font-size: 0.9rem;
+                            line-height: 1.4;
+                            padding: 8px;
+                            background: rgba(0, 0, 0, 0.02);
+                            border-radius: 8px;
+                            margin-top: 5px;
+                        ">
+                            ${exercise.description}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+    }
+    
+    // Метод удаления упражнения
+    deleteExercise(id) {
+        if (!confirm('Удалить это упражнение?')) return;
+        
+        let exercises = JSON.parse(localStorage.getItem('healthflow_exercises') || '[]');
+        exercises = exercises.filter(ex => ex.id !== id);
+        localStorage.setItem('healthflow_exercises', JSON.stringify(exercises));
+        
+        this.showNotification('Упражнение удалено', 'success');
+        this.loadExercises();
     }
     
     updateNavigation(pageId) {
@@ -217,7 +405,7 @@ class HealthFlowApp {
         // Обработка hash в URL
         window.addEventListener('hashchange', () => {
             const hash = window.location.hash.substring(1);
-            if (hash && hash !== this.state.currentPage && this.pages[hash]) {
+            if (hash && hash !== this.state.currentPage) {
                 this.loadPage(hash);
             }
         });
@@ -286,62 +474,6 @@ class HealthFlowApp {
                 });
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    async loadWorkoutsPage(container) {
-        // Загружаем HTML для тренировок
-        const response = await fetch('workouts.html');
-        const html = await response.text();
-        
-        // Вставляем HTML
-        container.innerHTML = html;
-        
-        // Загружаем и инициализируем модуль упражнений
-        await this.loadExercisesModule();
-    }
-    
-    async loadExercisesModule() {
-        try {
-            // Загружаем модуль упражнений
-            const module = await import('./exercises.js');
-            
-            // Инициализируем модуль
-            if (module && module.initExercises) {
-                await module.initExercises();
-                console.log('✅ Модуль упражнений загружен');
-            }
-        } catch (error) {
-            console.error('❌ Ошибка загрузки модуля упражнений:', error);
-        }
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
 }
 
 // Создаём и экспортируем экземпляр приложения
@@ -352,245 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.healthFlow.init();
 });
 
-
-
-
-// ДОБАВЬ ЭТОТ КОД В КОНЕЦ ФАЙЛА app.js, после всего остального
-
-// Обновляем метод loadPageContent для загрузки тренировок
-const originalLoadPageContent = HealthFlowApp.prototype.loadPageContent;
-
-HealthFlowApp.prototype.loadPageContent = async function(pageId) {
-    const container = document.getElementById('currentPage');
-    
-    try {
-        if (pageId === 'water') {
-            await this.loadWaterPage(container);
-        } else if (pageId === 'workouts') {
-            // ПРОСТО вставляем HTML напрямую
-            container.innerHTML = this.getWorkoutsPage();
-            this.initializeWorkouts();
-        } else {
-            container.innerHTML = this.getPageStub(pageId);
-        }
-    } catch (error) {
-        console.error(`❌ Ошибка загрузки страницы ${pageId}:`, error);
-        container.innerHTML = `<div class="error-message">Ошибка загрузки страницы</div>`;
-    }
-};
-
-// Добавляем метод для получения HTML тренировок
-HealthFlowApp.prototype.getWorkoutsPage = function() {
-    return `
-        <header class="page-header">
-            <h1 class="page-title">Тренировки</h1>
-            <div class="page-controls">
-                <div class="skin-counter">
-                    ✨ <span>${this.state.totalSkins}</span>
-                </div>
-                <button class="theme-toggle" onclick="window.healthFlow.toggleTheme()">
-                    <div class="theme-icon">${this.state.theme === 'cozy' ? '🌙' : '☀️'}</div>
-                </button>
-            </div>
-        </header>
-        
-        <div class="content-container">
-            <div style="text-align: center; padding: 40px 20px;">
-                <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;">🏋️</div>
-                <h2 style="font-size: 1.5rem; margin-bottom: 10px; color: var(--text-primary);">
-                    Тренировки
-                </h2>
-                <p style="color: var(--text-secondary); margin-bottom: 30px; line-height: 1.5;">
-                    Здесь ты сможешь создавать и отслеживать свои тренировки
-                </p>
-                
-                <!-- Кнопка создания упражнения -->
-                <button id="createExerciseBtn" style="
-                    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-                    border: none;
-                    border-radius: var(--radius);
-                    padding: 16px 32px;
-                    color: white;
-                    font-weight: 700;
-                    font-size: 1rem;
-                    cursor: pointer;
-                    margin-bottom: 20px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    gap: 10px;
-                    width: 100%;
-                    transition: var(--transition);
-                ">
-                    <span style="font-size: 1.2rem;">+</span>
-                    Создать упражнение
-                </button>
-                
-                <!-- Список упражнений -->
-                <div id="exercisesList" style="
-                    background: var(--surface);
-                    border-radius: var(--radius);
-                    border: 2px solid var(--border-light);
-                    min-height: 200px;
-                    padding: 20px;
-                    margin-top: 20px;
-                ">
-                    <div style="text-align: center; padding: 40px 20px;">
-                        <div style="font-size: 2rem; opacity: 0.3; margin-bottom: 10px;">📝</div>
-                        <div style="color: var(--text-secondary);">Упражнения появятся здесь</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-};
-
-// Метод для инициализации функционала тренировок
-HealthFlowApp.prototype.initializeWorkouts = function() {
-    console.log('Инициализация тренировок...');
-    
-    const createBtn = document.getElementById('createExerciseBtn');
-    if (createBtn) {
-        createBtn.addEventListener('click', () => {
-            this.createExercise();
-        });
-    }
-    
-    this.loadExercises();
-};
-
-// Метод создания упражнения
-HealthFlowApp.prototype.createExercise = function() {
-    const name = prompt('Введите название упражнения:');
-    if (!name || !name.trim()) return;
-    
-    const category = prompt('Выберите категорию (Кардио, Силовые, Растяжка, Йога, Другое):', 'Кардио');
-    const description = prompt('Описание (необязательно):', '');
-    
-    this.saveExercise({
-        name: name.trim(),
-        category: category || 'Кардио',
-        description: description || '',
-        difficulty: 'Средний',
-        createdAt: new Date().toISOString()
-    });
-    
-    this.showNotification(`Упражнение "${name}" создано!`, 'success');
-    this.loadExercises();
-};
-
-// Метод сохранения упражнения
-HealthFlowApp.prototype.saveExercise = function(exercise) {
-    let exercises = JSON.parse(localStorage.getItem('healthflow_exercises') || '[]');
-    exercise.id = Date.now();
-    exercises.push(exercise);
-    localStorage.setItem('healthflow_exercises', JSON.stringify(exercises));
-};
-
-// Метод загрузки упражнений
-HealthFlowApp.prototype.loadExercises = function() {
-    const container = document.getElementById('exercisesList');
-    if (!container) return;
-    
-    const exercises = JSON.parse(localStorage.getItem('healthflow_exercises') || '[]');
-    
-    if (exercises.length === 0) {
-        container.innerHTML = `
-            <div style="text-align: center; padding: 40px 20px;">
-                <div style="font-size: 2rem; opacity: 0.3; margin-bottom: 10px;">📝</div>
-                <div style="color: var(--text-secondary);">Упражнений пока нет</div>
-                <div style="color: var(--text-light); font-size: 0.9rem; margin-top: 5px;">Создайте первое упражнение!</div>
-            </div>
-        `;
-        return;
-    }
-    
-    let html = '<div style="margin-bottom: 15px; font-weight: 700; color: var(--text-primary);">Мои упражнения:</div>';
-    
-    exercises.forEach((exercise, index) => {
-        html += `
-            <div style="
-                background: var(--surface);
-                border: 1px solid var(--border-light);
-                border-radius: var(--radius-sm);
-                padding: 15px;
-                margin-bottom: 10px;
-                animation: fadeIn 0.3s ease-out ${index * 0.1}s both;
-            ">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-                    <div style="font-weight: 700; color: var(--text-primary); font-size: 1.1rem;">
-                        ${exercise.name}
-                    </div>
-                    <button onclick="window.healthFlow.deleteExercise(${exercise.id})" style="
-                        background: rgba(255, 107, 107, 0.1);
-                        border: none;
-                        color: var(--remove);
-                        padding: 4px 10px;
-                        border-radius: 12px;
-                        font-size: 0.85rem;
-                        cursor: pointer;
-                    ">
-                        Удалить
-                    </button>
-                </div>
-                
-                <div style="display: flex; gap: 10px; margin-bottom: 8px;">
-                    <span style="
-                        background: rgba(6, 180, 143, 0.1);
-                        color: var(--primary);
-                        padding: 3px 8px;
-                        border-radius: 10px;
-                        font-size: 0.8rem;
-                        font-weight: 600;
-                    ">
-                        ${exercise.category}
-                    </span>
-                    
-                    <span style="
-                        background: rgba(255, 154, 118, 0.1);
-                        color: var(--accent);
-                        padding: 3px 8px;
-                        border-radius: 10px;
-                        font-size: 0.8rem;
-                        font-weight: 600;
-                    ">
-                        ${exercise.difficulty}
-                    </span>
-                </div>
-                
-                ${exercise.description ? `
-                    <div style="
-                        color: var(--text-secondary);
-                        font-size: 0.9rem;
-                        line-height: 1.4;
-                        padding: 8px;
-                        background: rgba(0, 0, 0, 0.02);
-                        border-radius: 8px;
-                        margin-top: 5px;
-                    ">
-                        ${exercise.description}
-                    </div>
-                ` : ''}
-            </div>
-        `;
-    });
-    
-    container.innerHTML = html;
-};
-
-// Метод удаления упражнения
-HealthFlowApp.prototype.deleteExercise = function(id) {
-    if (!confirm('Удалить это упражнение?')) return;
-    
-    let exercises = JSON.parse(localStorage.getItem('healthflow_exercises') || '[]');
-    exercises = exercises.filter(ex => ex.id !== id);
-    localStorage.setItem('healthflow_exercises', JSON.stringify(exercises));
-    
-    this.showNotification('Упражнение удалено', 'success');
-    this.loadExercises();
-};
-
-// Добавляем анимацию в style.css если её нет
+// Добавляем анимацию
 const style = document.createElement('style');
 style.textContent = `
     @keyframes fadeIn {
@@ -600,6 +494,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-console.log('✅ Модуль тренировок добавлен в app.js');
-
-
+console.log('✅ App.js обновлен с тренировками');
