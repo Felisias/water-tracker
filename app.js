@@ -13,6 +13,10 @@ class HealthFlowApp {
         this.draggedSet = null;
         this.currentWorkoutData = null; // Добавляем это
         this.currentMuscleFilter = 'Все';
+        this.duringWorkout = {
+            isActive: false,
+            changedValues: [] // Массив для отслеживания изменений
+        };
     }
 
     async init() {
@@ -4133,29 +4137,30 @@ class HealthFlowApp {
             : 0;
 
         container.innerHTML = `
-            <!-- Верхняя панель с таймером и прогрессом -->
+            <!-- Верхняя панель с таймером и прогрессом (УМЕНЬШЕННАЯ) -->
             <div style="
                 background: linear-gradient(135deg, ${workout.color}, ${this.darkenColor(workout.color)});
                 color: white;
-                padding: 20px 16px;
+                padding: 15px 16px 10px 16px;
                 position: fixed;
                 top: 0;
                 left: 0;
                 right: 0;
                 z-index: 100;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+                box-shadow: 0 2px 15px rgba(0, 0, 0, 0.15);
+                height: 140px;
             ">
                 <!-- Заголовок и управление -->
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <div style="font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <div style="font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
                         <button id="backToWorkoutsFromExecution" style="
                             background: rgba(255, 255, 255, 0.2);
                             border: none;
                             color: white;
-                            width: 36px;
-                            height: 36px;
+                            width: 32px;
+                            height: 32px;
                             border-radius: 50%;
-                            font-size: 20px;
+                            font-size: 18px;
                             cursor: pointer;
                             display: flex;
                             align-items: center;
@@ -4163,72 +4168,72 @@ class HealthFlowApp {
                         ">
                             ←
                         </button>
-                        <span>${workout.name}</span>
+                        <span style="font-size: 15px;">${workout.name}</span>
                     </div>
                     <button id="pauseWorkoutBtn" style="
                         background: rgba(255, 255, 255, 0.2);
                         border: none;
                         color: white;
-                        padding: 8px 16px;
-                        border-radius: 20px;
-                        font-size: 14px;
+                        padding: 6px 12px;
+                        border-radius: 16px;
+                        font-size: 13px;
                         font-weight: 600;
                         cursor: pointer;
                         display: flex;
                         align-items: center;
-                        gap: 6px;
+                        gap: 4px;
                     ">
                         ⏸️ Пауза
                     </button>
                 </div>
                 
                 <!-- Таймер -->
-                <div style="text-align: center; margin-bottom: 20px;">
+                <div style="text-align: center; margin-bottom: 12px;">
                     <div id="workoutTimer" style="
-                        font-size: 42px;
+                        font-size: 32px;
                         font-weight: 800;
                         font-family: 'SF Mono', monospace;
-                        letter-spacing: 2px;
-                        margin-bottom: 4px;
+                        letter-spacing: 1px;
+                        margin-bottom: 2px;
                     ">
                         00:00
                     </div>
-                    <div style="font-size: 14px; opacity: 0.9;">
-                        Общее время тренировки
+                    <div style="font-size: 12px; opacity: 0.9;">
+                        Общее время
                     </div>
                 </div>
                 
                 <!-- Прогресс тренировки -->
-                <div style="margin-bottom: 8px;">
-                    <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                <div style="margin-bottom: 5px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px;">
                         <span>Прогресс</span>
                         <span>${workout.completedSets}/${workout.totalSets} подходов</span>
                     </div>
                     <div style="
                         width: 100%;
-                        height: 8px;
+                        height: 6px;
                         background: rgba(255, 255, 255, 0.2);
-                        border-radius: 4px;
+                        border-radius: 3px;
                         overflow: hidden;
                     ">
                         <div id="workoutProgressBar" style="
                             width: ${progressPercent}%;
                             height: 100%;
                             background: white;
-                            border-radius: 4px;
+                            border-radius: 3px;
                             transition: width 0.3s ease;
                         "></div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Основной контент - лента упражнений -->
-            <div style="padding-top: 180px; padding-bottom: 140px; min-height: 100vh;">
+            <div style="padding-top: 150px; padding-bottom: 140px; min-height: 100vh;">
                 <div id="workoutExercisesContainer">
                     <!-- Лента упражнений будет загружена здесь -->
                 </div>
             </div>
-            
+
             <!-- Нижняя панель управления -->
             <div style="
                 position: fixed;
@@ -4261,7 +4266,7 @@ class HealthFlowApp {
                     <span id="completeSetIcon">✓</span>
                 </button>
             </div>
-            
+
             <!-- Модальное окно паузы -->
             <div id="pauseModal" style="
                 position: fixed;
@@ -4287,7 +4292,7 @@ class HealthFlowApp {
                     <div style="font-size: 24px; font-weight: 700; color: var(--text-primary); margin-bottom: 20px;">
                         ⏸️ Тренировка на паузе
                     </div>
-                    
+
                     <div style="margin-bottom: 24px;">
                         <div id="pauseTimer" style="font-size: 32px; font-weight: 800; color: var(--primary); margin-bottom: 8px;">
                             00:00
@@ -4296,7 +4301,7 @@ class HealthFlowApp {
                             Время паузы
                         </div>
                     </div>
-                    
+
                     <div style="display: flex; flex-direction: column; gap: 12px;">
                         <button id="resumeWorkoutBtn" style="
                             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
@@ -4310,7 +4315,7 @@ class HealthFlowApp {
                         ">
                             ▶️ Продолжить тренировку
                         </button>
-                        
+
                         <button id="finishWorkoutBtn" style="
                             background: transparent;
                             border: 2px solid var(--remove);
@@ -4492,7 +4497,7 @@ class HealthFlowApp {
                                         align-items: center;
                                         justify-content: space-between;
                                         transition: all 0.2s ease;
-                                        cursor: ${isSetCompleted ? 'default' : 'pointer'};
+                                        cursor: pointer;
                                      "
                                      onclick="window.healthFlow.selectSet(${exerciseIndex}, ${setIndex})">
                                      
@@ -4545,11 +4550,9 @@ class HealthFlowApp {
                                         </div>
                                     </div>
                                     
-                                    <!-- Чекбокс выполнения -->
-                                    <div style="width: 24px; height: 24px;">
-                                        <input type="checkbox" 
-                                               ${isSetCompleted ? 'checked' : ''}
-                                               style="display: none;">
+                                    <!-- Чекбокс выполнения (КЛИКАБЕЛЬНЫЙ) -->
+                                    <div style="width: 24px; height: 24px;" 
+                                         onclick="window.healthFlow.toggleSetComplete(${exerciseIndex}, ${setIndex}, event)">
                                         <div style="
                                             width: 24px;
                                             height: 24px;
@@ -4561,6 +4564,8 @@ class HealthFlowApp {
                                             background: ${isSetCompleted ? 'var(--success)' : 'transparent'};
                                             color: white;
                                             font-size: 14px;
+                                            cursor: pointer;
+                                            transition: all 0.2s ease;
                                         ">
                                             ${isSetCompleted ? '✓' : ''}
                                         </div>
@@ -4595,19 +4600,26 @@ class HealthFlowApp {
         });
 
         container.innerHTML = html;
+
+        // Обновляем кнопку завершения
+        this.updateCompleteButton();
     }
 
     // Выбор подхода для выполнения
+    // Обновленный метод selectSet с возможностью редактирования
     selectSet(exerciseIndex, setIndex) {
         if (!this.currentActiveWorkout) return;
 
         const workout = this.currentActiveWorkout;
         const set = workout.exercises[exerciseIndex].sets[setIndex];
 
-        // Если подход уже выполнен, ничего не делаем
-        if (set.completed) return;
+        // Если подход уже выполнен, показываем модалку для редактирования
+        if (set.completed) {
+            this.showSetEditModal(exerciseIndex, setIndex, set);
+            return;
+        }
 
-        // Переходим к выбранному подходу
+        // Иначе просто переходим к выбранному подходу
         workout.currentExerciseIndex = exerciseIndex;
         workout.currentSetIndex = setIndex;
 
@@ -4621,6 +4633,190 @@ class HealthFlowApp {
                 setElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }, 100);
+    }
+
+    // Модальное окно для редактирования повторов и веса
+    showSetEditModal(exerciseIndex, setIndex, set) {
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        `;
+
+        modal.innerHTML = `
+            <div style="
+                background: var(--surface);
+                border-radius: 20px;
+                padding: 24px;
+                max-width: 400px;
+                width: 100%;
+                max-height: 90vh;
+                overflow-y: auto;
+            ">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div style="font-size: 20px; font-weight: 700; color: var(--text-primary);">
+                        ✏️ Редактировать подход
+                    </div>
+                    <button id="closeSetEditModal" style="
+                        background: transparent;
+                        border: none;
+                        color: var(--text-secondary);
+                        font-size: 28px;
+                        cursor: pointer;
+                        padding: 0;
+                        width: 36px;
+                        height: 36px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border-radius: 50%;
+                    ">
+                        ×
+                    </button>
+                </div>
+                
+                <div style="margin-bottom: 24px;">
+                    <label style="display: block; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; font-size: 15px;">
+                        Повторения
+                    </label>
+                    <input type="number" 
+                           id="editSetReps" 
+                           value="${set.actualReps}" 
+                           min="1" 
+                           max="100"
+                           style="
+                                width: 100%;
+                                padding: 14px;
+                                border: 2px solid var(--border-light);
+                                border-radius: 10px;
+                                font-size: 16px;
+                                font-weight: 700;
+                                text-align: center;
+                                background: var(--surface);
+                                color: var(--text-primary);
+                                outline: none;
+                           ">
+                </div>
+                
+                <div style="margin-bottom: 24px;">
+                    <label style="display: block; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; font-size: 15px;">
+                        Вес (кг)
+                    </label>
+                    <input type="number" 
+                           id="editSetWeight" 
+                           value="${set.actualWeight}" 
+                           min="0" 
+                           max="500" 
+                           step="0.5"
+                           style="
+                                width: 100%;
+                                padding: 14px;
+                                border: 2px solid var(--border-light);
+                                border-radius: 10px;
+                                font-size: 16px;
+                                font-weight: 700;
+                                text-align: center;
+                                background: var(--surface);
+                                color: var(--text-primary);
+                                outline: none;
+                           ">
+                </div>
+                
+                <div style="display: flex; gap: 12px;">
+                    <button id="cancelSetEdit" style="
+                        flex: 1;
+                        padding: 16px;
+                        border: 2px solid var(--border-light);
+                        border-radius: 10px;
+                        background: transparent;
+                        color: var(--text-secondary);
+                        font-weight: 700;
+                        font-size: 16px;
+                        cursor: pointer;
+                    ">
+                        Отмена
+                    </button>
+                    <button id="saveSetEdit" style="
+                        flex: 1;
+                        padding: 16px;
+                        border: none;
+                        border-radius: 10px;
+                        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+                        color: white;
+                        font-weight: 700;
+                        font-size: 16px;
+                        cursor: pointer;
+                    ">
+                        Сохранить
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Инициализация модалки
+        const closeBtn = modal.querySelector('#closeSetEditModal');
+        const cancelBtn = modal.querySelector('#cancelSetEdit');
+        const saveBtn = modal.querySelector('#saveSetEdit');
+
+        const closeModal = () => {
+            document.body.removeChild(modal);
+        };
+
+        closeBtn.addEventListener('click', closeModal);
+        cancelBtn.addEventListener('click', closeModal);
+
+        saveBtn.addEventListener('click', () => {
+            const newReps = parseInt(document.getElementById('editSetReps').value) || set.actualReps;
+            const newWeight = parseFloat(document.getElementById('editSetWeight').value) || set.actualWeight;
+
+            const workout = this.currentActiveWorkout;
+            if (workout) {
+                const exercise = workout.exercises[exerciseIndex];
+                const currentSet = exercise.sets[setIndex];
+
+                // Запоминаем изменения
+                if (newReps !== currentSet.reps || newWeight !== currentSet.weight) {
+                    this.duringWorkout.changedValues.push({
+                        exerciseIndex,
+                        setIndex,
+                        oldReps: currentSet.reps,
+                        oldWeight: currentSet.weight,
+                        newReps,
+                        newWeight,
+                        exerciseName: exercise.name,
+                        setNumber: setIndex + 1
+                    });
+                }
+
+                // Обновляем значения
+                currentSet.actualReps = newReps;
+                currentSet.actualWeight = newWeight;
+
+                // Перерисовываем ленту
+                this.loadWorkoutExercises();
+                this.showNotification('Значения обновлены!', 'success');
+            }
+
+            closeModal();
+        });
+
+        // Закрытие по клику вне модалки
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
     }
 
     // Выполнение следующего подхода
@@ -4814,14 +5010,176 @@ class HealthFlowApp {
     finishWorkout() {
         if (!this.currentActiveWorkout) return;
 
+        // Проверяем, есть ли изменения весов/повторов
+        if (this.duringWorkout && this.duringWorkout.changedValues && this.duringWorkout.changedValues.length > 0) {
+            this.showSaveChangesModal();
+        } else {
+            this.finalizeWorkout();
+        }
+    }
+
+    // Модальное окно для сохранения изменений
+    showSaveChangesModal() {
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        `;
+
+        const changesList = this.duringWorkout.changedValues.map(change => `
+            <div style="padding: 10px 0; border-bottom: 1px solid var(--border-light);">
+                <div style="font-weight: 600; color: var(--text-primary);">
+                    ${change.exerciseName} - Подход ${change.setNumber}
+                </div>
+                <div style="font-size: 14px; color: var(--text-secondary);">
+                    Повторы: ${change.oldReps} → ${change.newReps} | Вес: ${change.oldWeight} → ${change.newWeight} кг
+                </div>
+            </div>
+        `).join('');
+
+        modal.innerHTML = `
+            <div style="
+                background: var(--surface);
+                border-radius: 20px;
+                padding: 24px;
+                max-width: 500px;
+                width: 100%;
+                max-height: 80vh;
+                overflow-y: auto;
+            ">
+                <div style="font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">
+                    💾 Сохранить изменения?
+                </div>
+                
+                <div style="color: var(--text-secondary); margin-bottom: 20px; font-size: 15px;">
+                    Вы изменили значения в ${this.duringWorkout.changedValues.length} подходах. Сохранить их в тренировке?
+                </div>
+                
+                <div style="
+                    background: rgba(0, 0, 0, 0.03);
+                    border-radius: 12px;
+                    padding: 16px;
+                    margin-bottom: 24px;
+                    max-height: 200px;
+                    overflow-y: auto;
+                ">
+                    ${changesList}
+                </div>
+                
+                <div style="display: flex; gap: 12px;">
+                    <button id="discardChanges" style="
+                        flex: 1;
+                        padding: 16px;
+                        border: 2px solid var(--border-light);
+                        border-radius: 10px;
+                        background: transparent;
+                        color: var(--text-secondary);
+                        font-weight: 700;
+                        font-size: 16px;
+                        cursor: pointer;
+                    ">
+                        Не сохранять
+                    </button>
+                    <button id="saveChanges" style="
+                        flex: 1;
+                        padding: 16px;
+                        border: none;
+                        border-radius: 10px;
+                        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+                        color: white;
+                        font-weight: 700;
+                        font-size: 16px;
+                        cursor: pointer;
+                    ">
+                        Сохранить
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        const discardBtn = modal.querySelector('#discardChanges');
+        const saveBtn = modal.querySelector('#saveChanges');
+
+        const closeModal = () => {
+            document.body.removeChild(modal);
+        };
+
+        discardBtn.addEventListener('click', () => {
+            this.duringWorkout.changedValues = [];
+            closeModal();
+            this.finalizeWorkout();
+        });
+
+        saveBtn.addEventListener('click', () => {
+            this.saveWorkoutChanges();
+            closeModal();
+            this.finalizeWorkout();
+        });
+
+        // Закрытие по клику вне модалки
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+                this.finalizeWorkout();
+            }
+        });
+    }
+
+    // Сохранение изменений в тренировке
+    saveWorkoutChanges() {
+        const workout = this.currentActiveWorkout;
+        if (!workout) return;
+
+        // Загружаем тренировки из localStorage
+        let workouts = JSON.parse(localStorage.getItem('healthflow_workouts') || '[]');
+        const workoutIndex = workouts.findIndex(w => w.id === workout.id);
+
+        if (workoutIndex === -1) return;
+
+        // Применяем изменения
+        this.duringWorkout.changedValues.forEach(change => {
+            const originalExercise = workouts[workoutIndex].exercises[change.exerciseIndex];
+            if (originalExercise) {
+                const originalSet = originalExercise.sets[change.setIndex];
+                if (originalSet) {
+                    originalSet.reps = change.newReps;
+                    originalSet.weight = change.newWeight;
+                }
+            }
+        });
+
+        // Сохраняем обновленную тренировку
+        localStorage.setItem('healthflow_workouts', JSON.stringify(workouts));
+
+        this.showNotification('Изменения сохранены в тренировке!', 'success');
+        this.duringWorkout.changedValues = [];
+    }
+
+    // Финальное завершение тренировки
+    finalizeWorkout() {
+        if (!this.currentActiveWorkout) return;
+
         // Останавливаем таймеры
         const workout = this.currentActiveWorkout;
 
-        if (workout.timer.interval) {
+        if (workout.timer && workout.timer.interval) {
             clearInterval(workout.timer.interval);
         }
 
-        this.stopPauseTimer();
+        if (this.stopPauseTimer) {
+            this.stopPauseTimer();
+        }
 
         // Рассчитываем скинты
         const completedExercises = workout.exercises.filter(ex =>
@@ -4836,11 +5194,11 @@ class HealthFlowApp {
             workoutId: workout.id,
             workoutName: workout.name,
             date: new Date().toISOString(),
-            duration: Math.floor(workout.timer.elapsedSeconds / 60),
+            duration: Math.floor((workout.timer && workout.timer.elapsedSeconds) ? workout.timer.elapsedSeconds / 60 : 0),
             exercisesCompleted: completedExercises,
             totalExercises: workout.exercises.length,
-            setsCompleted: workout.completedSets,
-            totalSets: workout.totalSets,
+            setsCompleted: workout.completedSets || 0,
+            totalSets: workout.totalSets || 0,
             skinsEarned: skinsEarned
         });
 
@@ -4874,6 +5232,11 @@ class HealthFlowApp {
 
         // Очищаем текущую тренировку
         this.currentActiveWorkout = null;
+
+        // Очищаем изменения
+        if (this.duringWorkout) {
+            this.duringWorkout.changedValues = [];
+        }
     }
 
     // Обновление метода startWorkout
@@ -4881,6 +5244,66 @@ class HealthFlowApp {
         if (confirm('Начать тренировку?')) {
             this.startWorkoutExecution(workoutId);
         }
+    }
+
+
+    toggleSetComplete(exerciseIndex, setIndex, event) {
+        event.stopPropagation(); // Чтобы не срабатывал клик на весь подход
+
+        if (!this.currentActiveWorkout) return;
+
+        const workout = this.currentActiveWorkout;
+        const set = workout.exercises[exerciseIndex].sets[setIndex];
+
+        set.completed = !set.completed;
+
+        if (set.completed) {
+            workout.completedSets++;
+        } else {
+            workout.completedSets = Math.max(0, workout.completedSets - 1);
+        }
+
+        // Обновляем прогресс бар
+        this.updateProgressBar();
+
+        // Перерисовываем ленту
+        this.loadWorkoutExercises();
+
+        // Показываем/скрываем кнопку завершения
+        this.updateCompleteButton();
+    }
+
+
+    updateCompleteButton() {
+        if (!this.currentActiveWorkout) return;
+
+        const workout = this.currentActiveWorkout;
+        const completeBtn = document.getElementById('completeNextSetBtn');
+        const completeText = document.getElementById('completeSetText');
+        const completeIcon = document.getElementById('completeSetIcon');
+
+        if (!completeBtn || !completeText || !completeIcon) return;
+
+        const allCompleted = workout.completedSets === workout.totalSets;
+
+        if (allCompleted) {
+            completeText.textContent = 'Завершить тренировку';
+            completeIcon.textContent = '🏁';
+
+            // Меняем цвет кнопки
+            completeBtn.style.background = 'linear-gradient(135deg, #FF9A76, #E86A50)';
+        } else {
+            completeText.textContent = 'Выполнить следующий подход';
+            completeIcon.textContent = '✓';
+
+            // Возвращаем обычный цвет
+            completeBtn.style.background = 'linear-gradient(135deg, var(--primary), var(--primary-dark))';
+        }
+
+        // Обновляем обработчик кнопки
+        completeBtn.onclick = allCompleted ?
+            () => this.finishWorkout() :
+            () => this.completeNextSet();
     }
 }
 
