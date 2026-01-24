@@ -6,12 +6,6 @@ class HealthFlowApp {
             totalSkins: 0,
             theme: 'cozy'
         };
-        
-        this.pages = {
-            water: null,
-            workouts: null,
-            profile: null
-        };
     }
     
     async init() {
@@ -47,7 +41,7 @@ class HealthFlowApp {
         
         // Загружаем последнюю страницу
         const savedPage = localStorage.getItem('healthflow_page');
-        if (savedPage && this.pages[savedPage]) {
+        if (savedPage) {
             this.state.currentPage = savedPage;
         }
     }
@@ -88,17 +82,13 @@ class HealthFlowApp {
             if (pageId === 'water') {
                 await this.loadWaterPage(container);
             } else if (pageId === 'workouts') {
-                // Вставляем HTML тренировок напрямую
-                container.innerHTML = this.getWorkoutsPage();
-                this.initializeWorkouts();
+                this.showWorkoutsPage(container);
             } else if (pageId === 'profile') {
-                container.innerHTML = this.getProfilePage();
-            } else {
-                container.innerHTML = `<div>Страница не найдена</div>`;
+                this.showProfilePage(container);
             }
         } catch (error) {
             console.error(`❌ Ошибка загрузки страницы ${pageId}:`, error);
-            container.innerHTML = `<div class="error-message">Ошибка загрузки страницы</div>`;
+            container.innerHTML = `<div style="padding: 40px; text-align: center; color: var(--text-secondary);">Ошибка загрузки страницы</div>`;
         }
     }
     
@@ -129,9 +119,11 @@ class HealthFlowApp {
         }
     }
     
-    // Метод для получения HTML тренировок
-    getWorkoutsPage() {
-        return `
+    // ПРОСТАЯ СТРАНИЦА ТРЕНИРОВОК
+    showWorkoutsPage(container) {
+        console.log('Показываем страницу тренировок...');
+        
+        container.innerHTML = `
             <header class="page-header">
                 <h1 class="page-title">Тренировки</h1>
                 <div class="page-controls">
@@ -145,24 +137,16 @@ class HealthFlowApp {
             </header>
             
             <div class="content-container">
-                <div style="text-align: center; padding: 40px 20px;">
-                    <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;">🏋️</div>
-                    <h2 style="font-size: 1.5rem; margin-bottom: 10px; color: var(--text-primary);">
-                        Тренировки
-                    </h2>
-                    <p style="color: var(--text-secondary); margin-bottom: 30px; line-height: 1.5;">
-                        Здесь ты сможешь создавать и отслеживать свои тренировки
-                    </p>
-                    
+                <div style="padding: 20px;">
                     <!-- Кнопка создания упражнения -->
                     <button id="createExerciseBtn" style="
                         background: linear-gradient(135deg, var(--primary), var(--primary-dark));
                         border: none;
-                        border-radius: var(--radius);
-                        padding: 16px 32px;
+                        border-radius: 12px;
+                        padding: 16px;
                         color: white;
                         font-weight: 700;
-                        font-size: 1rem;
+                        font-size: 16px;
                         cursor: pointer;
                         margin-bottom: 20px;
                         display: flex;
@@ -170,34 +154,176 @@ class HealthFlowApp {
                         justify-content: center;
                         gap: 10px;
                         width: 100%;
-                        transition: var(--transition);
+                        margin-top: 10px;
                     ">
-                        <span style="font-size: 1.2rem;">+</span>
+                        <span style="font-size: 20px;">+</span>
                         Создать упражнение
                     </button>
                     
                     <!-- Список упражнений -->
                     <div id="exercisesList" style="
                         background: var(--surface);
-                        border-radius: var(--radius);
+                        border-radius: 12px;
                         border: 2px solid var(--border-light);
                         min-height: 200px;
                         padding: 20px;
                         margin-top: 20px;
                     ">
                         <div style="text-align: center; padding: 40px 20px;">
-                            <div style="font-size: 2rem; opacity: 0.3; margin-bottom: 10px;">📝</div>
-                            <div style="color: var(--text-secondary);">Упражнения появятся здесь</div>
+                            <div style="font-size: 32px; opacity: 0.3; margin-bottom: 10px;">🏋️</div>
+                            <div style="color: var(--text-secondary); font-size: 16px;">Упражнений пока нет</div>
+                            <div style="color: var(--text-light); font-size: 14px; margin-top: 5px;">Создайте первое упражнение!</div>
                         </div>
                     </div>
                 </div>
             </div>
         `;
+        
+        // Инициализируем тренировки после отрисовки
+        setTimeout(() => this.initializeWorkouts(), 100);
     }
     
-    // Метод для получения HTML профиля
-    getProfilePage() {
-        return `
+    initializeWorkouts() {
+        console.log('Инициализируем тренировки...');
+        
+        const createBtn = document.getElementById('createExerciseBtn');
+        if (createBtn) {
+            createBtn.addEventListener('click', () => {
+                this.createExercise();
+            });
+        }
+        
+        this.loadExercises();
+    }
+    
+    createExercise() {
+        const name = prompt('Введите название упражнения:');
+        if (!name || !name.trim()) return;
+        
+        const category = prompt('Выберите категорию (Кардио, Силовые, Растяжка, Йога, Другое):', 'Кардио');
+        const description = prompt('Описание (необязательно):', '');
+        
+        // Сохраняем упражнение
+        let exercises = JSON.parse(localStorage.getItem('healthflow_exercises') || '[]');
+        exercises.push({
+            id: Date.now(),
+            name: name.trim(),
+            category: category || 'Кардио',
+            description: description || '',
+            difficulty: 'Средний',
+            createdAt: new Date().toISOString()
+        });
+        
+        localStorage.setItem('healthflow_exercises', JSON.stringify(exercises));
+        
+        this.showNotification(`Упражнение "${name}" создано!`, 'success');
+        this.loadExercises();
+    }
+    
+    loadExercises() {
+        const container = document.getElementById('exercisesList');
+        if (!container) return;
+        
+        const exercises = JSON.parse(localStorage.getItem('healthflow_exercises') || '[]');
+        
+        if (exercises.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px 20px;">
+                    <div style="font-size: 32px; opacity: 0.3; margin-bottom: 10px;">🏋️</div>
+                    <div style="color: var(--text-secondary); font-size: 16px;">Упражнений пока нет</div>
+                    <div style="color: var(--text-light); font-size: 14px; margin-top: 5px;">Создайте первое упражнение!</div>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '<div style="margin-bottom: 15px; font-weight: 700; color: var(--text-primary);">Мои упражнения:</div>';
+        
+        exercises.forEach((exercise, index) => {
+            html += `
+                <div style="
+                    background: var(--surface);
+                    border: 1px solid var(--border-light);
+                    border-radius: 8px;
+                    padding: 15px;
+                    margin-bottom: 10px;
+                    opacity: 0;
+                    animation: fadeIn 0.3s ease-out ${index * 0.1}s forwards;
+                ">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                        <div style="font-weight: 700; color: var(--text-primary); font-size: 17px;">
+                            ${exercise.name}
+                        </div>
+                        <button onclick="window.healthFlow.deleteExercise(${exercise.id})" style="
+                            background: rgba(255, 107, 107, 0.1);
+                            border: none;
+                            color: var(--remove);
+                            padding: 4px 10px;
+                            border-radius: 12px;
+                            font-size: 14px;
+                            cursor: pointer;
+                        ">
+                            Удалить
+                        </button>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-bottom: 8px;">
+                        <span style="
+                            background: rgba(6, 180, 143, 0.1);
+                            color: var(--primary);
+                            padding: 3px 8px;
+                            border-radius: 10px;
+                            font-size: 12px;
+                            font-weight: 600;
+                        ">
+                            ${exercise.category}
+                        </span>
+                        
+                        <span style="
+                            background: rgba(255, 154, 118, 0.1);
+                            color: var(--accent);
+                            padding: 3px 8px;
+                            border-radius: 10px;
+                            font-size: 12px;
+                            font-weight: 600;
+                        ">
+                            Средний
+                        </span>
+                    </div>
+                    
+                    ${exercise.description ? `
+                        <div style="
+                            color: var(--text-secondary);
+                            font-size: 14px;
+                            line-height: 1.4;
+                            padding: 8px;
+                            background: rgba(0, 0, 0, 0.02);
+                            border-radius: 8px;
+                            margin-top: 5px;
+                        ">
+                            ${exercise.description}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+    }
+    
+    deleteExercise(id) {
+        if (!confirm('Удалить это упражнение?')) return;
+        
+        let exercises = JSON.parse(localStorage.getItem('healthflow_exercises') || '[]');
+        exercises = exercises.filter(ex => ex.id !== id);
+        localStorage.setItem('healthflow_exercises', JSON.stringify(exercises));
+        
+        this.showNotification('Упражнение удалено', 'success');
+        this.loadExercises();
+    }
+    
+    showProfilePage(container) {
+        container.innerHTML = `
             <header class="page-header">
                 <h1 class="page-title">Профиль</h1>
                 <div class="page-controls">
@@ -209,6 +335,7 @@ class HealthFlowApp {
                     </button>
                 </div>
             </header>
+            
             <div class="content-container">
                 <div style="text-align: center; padding: 60px 20px;">
                     <div style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;">👤</div>
@@ -230,151 +357,6 @@ class HealthFlowApp {
                 </div>
             </div>
         `;
-    }
-    
-    // Метод для инициализации функционала тренировок
-    initializeWorkouts() {
-        console.log('Инициализация тренировок...');
-        
-        const createBtn = document.getElementById('createExerciseBtn');
-        if (createBtn) {
-            createBtn.addEventListener('click', () => {
-                this.createExercise();
-            });
-        }
-        
-        this.loadExercises();
-    }
-    
-    // Метод создания упражнения
-    createExercise() {
-        const name = prompt('Введите название упражнения:');
-        if (!name || !name.trim()) return;
-        
-        const category = prompt('Выберите категорию (Кардио, Силовые, Растяжка, Йога, Другое):', 'Кардио');
-        const description = prompt('Описание (необязательно):', '');
-        
-        this.saveExercise({
-            name: name.trim(),
-            category: category || 'Кардио',
-            description: description || '',
-            difficulty: 'Средний',
-            createdAt: new Date().toISOString()
-        });
-        
-        this.showNotification(`Упражнение "${name}" создано!`, 'success');
-        this.loadExercises();
-    }
-    
-    // Метод сохранения упражнения
-    saveExercise(exercise) {
-        let exercises = JSON.parse(localStorage.getItem('healthflow_exercises') || '[]');
-        exercise.id = Date.now();
-        exercises.push(exercise);
-        localStorage.setItem('healthflow_exercises', JSON.stringify(exercises));
-    }
-    
-    // Метод загрузки упражнений
-    loadExercises() {
-        const container = document.getElementById('exercisesList');
-        if (!container) return;
-        
-        const exercises = JSON.parse(localStorage.getItem('healthflow_exercises') || '[]');
-        
-        if (exercises.length === 0) {
-            container.innerHTML = `
-                <div style="text-align: center; padding: 40px 20px;">
-                    <div style="font-size: 2rem; opacity: 0.3; margin-bottom: 10px;">📝</div>
-                    <div style="color: var(--text-secondary);">Упражнений пока нет</div>
-                    <div style="color: var(--text-light); font-size: 0.9rem; margin-top: 5px;">Создайте первое упражнение!</div>
-                </div>
-            `;
-            return;
-        }
-        
-        let html = '<div style="margin-bottom: 15px; font-weight: 700; color: var(--text-primary);">Мои упражнения:</div>';
-        
-        exercises.forEach((exercise, index) => {
-            html += `
-                <div style="
-                    background: var(--surface);
-                    border: 1px solid var(--border-light);
-                    border-radius: var(--radius-sm);
-                    padding: 15px;
-                    margin-bottom: 10px;
-                    animation: fadeIn 0.3s ease-out ${index * 0.1}s both;
-                ">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-                        <div style="font-weight: 700; color: var(--text-primary); font-size: 1.1rem;">
-                            ${exercise.name}
-                        </div>
-                        <button onclick="window.healthFlow.deleteExercise(${exercise.id})" style="
-                            background: rgba(255, 107, 107, 0.1);
-                            border: none;
-                            color: var(--remove);
-                            padding: 4px 10px;
-                            border-radius: 12px;
-                            font-size: 0.85rem;
-                            cursor: pointer;
-                        ">
-                            Удалить
-                        </button>
-                    </div>
-                    
-                    <div style="display: flex; gap: 10px; margin-bottom: 8px;">
-                        <span style="
-                            background: rgba(6, 180, 143, 0.1);
-                            color: var(--primary);
-                            padding: 3px 8px;
-                            border-radius: 10px;
-                            font-size: 0.8rem;
-                            font-weight: 600;
-                        ">
-                            ${exercise.category}
-                        </span>
-                        
-                        <span style="
-                            background: rgba(255, 154, 118, 0.1);
-                            color: var(--accent);
-                            padding: 3px 8px;
-                            border-radius: 10px;
-                            font-size: 0.8rem;
-                            font-weight: 600;
-                        ">
-                            ${exercise.difficulty}
-                        </span>
-                    </div>
-                    
-                    ${exercise.description ? `
-                        <div style="
-                            color: var(--text-secondary);
-                            font-size: 0.9rem;
-                            line-height: 1.4;
-                            padding: 8px;
-                            background: rgba(0, 0, 0, 0.02);
-                            border-radius: 8px;
-                            margin-top: 5px;
-                        ">
-                            ${exercise.description}
-                        </div>
-                    ` : ''}
-                </div>
-            `;
-        });
-        
-        container.innerHTML = html;
-    }
-    
-    // Метод удаления упражнения
-    deleteExercise(id) {
-        if (!confirm('Удалить это упражнение?')) return;
-        
-        let exercises = JSON.parse(localStorage.getItem('healthflow_exercises') || '[]');
-        exercises = exercises.filter(ex => ex.id !== id);
-        localStorage.setItem('healthflow_exercises', JSON.stringify(exercises));
-        
-        this.showNotification('Упражнение удалено', 'success');
-        this.loadExercises();
     }
     
     updateNavigation(pageId) {
@@ -493,5 +475,3 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
-
-console.log('✅ App.js обновлен с тренировками');
