@@ -4057,6 +4057,991 @@ class HealthFlowApp {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+    // === ЭКРАН ВЫПОЛНЕНИЯ ТРЕНИРОВКИ ===
+
+    // Скрываем/показываем навигацию и заголовок
+    toggleUIForWorkout(show) {
+        const bottomNav = document.getElementById('bottomNav');
+        const currentPage = document.getElementById('currentPage');
+
+        if (bottomNav) {
+            bottomNav.style.display = show ? 'flex' : 'none';
+        }
+
+        if (currentPage) {
+            currentPage.style.paddingTop = show ? '0' : '60px';
+        }
+    }
+
+    // Начать тренировку (основной метод)
+    startWorkout(workoutId) {
+        const workouts = JSON.parse(localStorage.getItem('healthflow_workouts') || '[]');
+        const workout = workouts.find(w => w.id === workoutId);
+
+        if (!workout) {
+            alert('Тренировка не найдена!');
+            return;
+        }
+
+        // Скрываем навигацию
+        this.toggleUIForWorkout(false);
+
+        // Создаем контейнер для тренировки
+        const container = document.getElementById('currentPage');
+
+        // Создаем копию тренировки с добавленными полями для отслеживания выполнения
+        const workoutWithTracking = {
+            ...workout,
+            startedAt: new Date().toISOString(),
+            currentExerciseIndex: 0,
+            currentSetIndex: 0,
+            exercises: workout.exercises.map(exercise => ({
+                ...exercise,
+                sets: exercise.sets.map(set => ({
+                    ...set,
+                    completed: false,
+                    actualReps: set.reps,
+                    actualWeight: set.weight
+                }))
+            })),
+            completedSets: 0,
+            totalSets: workout.exercises.reduce((total, ex) => total + ex.sets.length, 0),
+            timer: {
+                startTime: Date.now(),
+                elapsedSeconds: 0,
+                interval: null
+            }
+        };
+
+        // Сохраняем текущую тренировку
+        this.currentActiveWorkout = workoutWithTracking;
+
+        // Показываем экран тренировки
+        this.showWorkoutExecutionScreen(container, workoutWithTracking);
+
+        // Запускаем таймер
+        this.startWorkoutTimer(workoutWithTracking);
+    }
+
+    // Показываем экран выполнения тренировки
+    showWorkoutExecutionScreen(container, workout) {
+        const progressPercent = workout.totalSets > 0
+            ? Math.round((workout.completedSets / workout.totalSets) * 100)
+            : 0;
+
+        container.innerHTML = `
+            <!-- Верхний блок с таймером и прогрессом -->
+            <div style="
+                background: linear-gradient(135deg, ${workout.color}, ${this.darkenColor(workout.color)});
+                color: white;
+                padding: 20px 16px;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                z-index: 100;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            ">
+                <!-- Заголовок и кнопка выхода -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div style="font-size: 18px; font-weight: 700;">
+                        ${workout.name}
+                    </div>
+                    <button id="exitWorkoutBtn" style="
+                        background: rgba(255, 255, 255, 0.2);
+                        border: none;
+                        color: white;
+                        padding: 8px 16px;
+                        border-radius: 20px;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                    ">
+                        ⏸️ Пауза
+                    </button>
+                </div>
+                
+                <!-- Таймер -->
+                <div style="text-align: center; margin-bottom: 16px;">
+                    <div id="workoutTimer" style="
+                        font-size: 36px;
+                        font-weight: 800;
+                        font-family: 'SF Mono', monospace;
+                        letter-spacing: 2px;
+                    ">
+                        00:00
+                    </div>
+                    <div style="font-size: 14px; opacity: 0.9;">
+                        Общее время
+                    </div>
+                </div>
+                
+                <!-- Прогресс-бар -->
+                <div style="margin-bottom: 8px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
+                        <span>Прогресс</span>
+                        <span>${workout.completedSets}/${workout.totalSets} подходов</span>
+                    </div>
+                    <div style="
+                        width: 100%;
+                        height: 8px;
+                        background: rgba(255, 255, 255, 0.2);
+                        border-radius: 4px;
+                        overflow: hidden;
+                    ">
+                        <div id="workoutProgress" style="
+                            width: ${progressPercent}%;
+                            height: 100%;
+                            background: white;
+                            border-radius: 4px;
+                            transition: width 0.3s ease;
+                        "></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Основной контент тренировки -->
+            <div style="padding-top: 160px; padding-bottom: 100px; min-height: 100vh;">
+                <!-- Текущее упражнение -->
+                <div id="currentExerciseSection" style="padding: 16px;">
+                    <!-- Контент упражнения будет загружен здесь -->
+                </div>
+                
+                <!-- Следующие упражнения -->
+                <div style="padding: 16px; margin-top: 20px;">
+                    <div style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px;">
+                        Следующие упражнения:
+                    </div>
+                    <div id="upcomingExercises" style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px;">
+                        <!-- Следующие упражнения будут загружены здесь -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Нижняя панель управления -->
+            <div style="
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: var(--surface);
+                padding: 16px;
+                border-top: 2px solid var(--border-light);
+                box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+                z-index: 100;
+            ">
+                <button id="completeSetBtn" style="
+                    width: 100%;
+                    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+                    border: none;
+                    color: white;
+                    padding: 18px;
+                    border-radius: 12px;
+                    font-size: 18px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+                    transition: all 0.2s ease;
+                ">
+                    <span id="completeSetText">Выполнить подход</span>
+                    <span id="completeSetIcon">✓</span>
+                </button>
+                
+                <!-- Быстрые действия -->
+                <div style="display: flex; gap: 12px; margin-top: 12px;">
+                    <button id="prevSetBtn" style="
+                        flex: 1;
+                        background: transparent;
+                        border: 2px solid var(--border-light);
+                        color: var(--text-secondary);
+                        padding: 12px;
+                        border-radius: 8px;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 6px;
+                    ">
+                        ← Предыдущий
+                    </button>
+                    <button id="nextSetBtn" style="
+                        flex: 1;
+                        background: var(--primary);
+                        border: none;
+                        color: white;
+                        padding: 12px;
+                        border-radius: 8px;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 6px;
+                    ">
+                        Следующий →
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Модальное окно паузы -->
+            <div id="pauseModal" style="
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.8);
+                display: none;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+                padding: 20px;
+            ">
+                <div style="
+                    background: var(--surface);
+                    border-radius: 16px;
+                    padding: 30px;
+                    max-width: 400px;
+                    width: 100%;
+                    text-align: center;
+                ">
+                    <div style="font-size: 24px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">
+                        Тренировка на паузе
+                    </div>
+                    
+                    <div style="margin-bottom: 24px;">
+                        <div id="pauseTimer" style="font-size: 32px; font-weight: 800; color: var(--primary); margin-bottom: 8px;">
+                            00:00
+                        </div>
+                        <div style="font-size: 14px; color: var(--text-secondary);">
+                            Время паузы
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <button id="resumeWorkoutBtn" style="
+                            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+                            border: none;
+                            color: white;
+                            padding: 16px;
+                            border-radius: 10px;
+                            font-size: 16px;
+                            font-weight: 700;
+                            cursor: pointer;
+                        ">
+                            Продолжить тренировку
+                        </button>
+                        
+                        <button id="finishWorkoutBtn" style="
+                            background: transparent;
+                            border: 2px solid var(--border-light);
+                            color: var(--text-secondary);
+                            padding: 16px;
+                            border-radius: 10px;
+                            font-size: 16px;
+                            font-weight: 600;
+                            cursor: pointer;
+                        ">
+                            Завершить тренировку
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Инициализируем тренировку
+        this.initializeWorkoutExecution();
+
+        // Загружаем текущее упражнение
+        this.loadCurrentExercise();
+
+        // Загружаем следующие упражнения
+        this.loadUpcomingExercises();
+    }
+
+    // Инициализация выполнения тренировки
+    initializeWorkoutExecution() {
+        // Кнопка выхода/паузы
+        const exitBtn = document.getElementById('exitWorkoutBtn');
+        if (exitBtn) {
+            exitBtn.addEventListener('click', () => {
+                this.pauseWorkout();
+            });
+        }
+
+        // Кнопка выполнения подхода
+        const completeSetBtn = document.getElementById('completeSetBtn');
+        if (completeSetBtn) {
+            completeSetBtn.addEventListener('click', () => {
+                this.completeCurrentSet();
+            });
+        }
+
+        // Кнопки навигации
+        const prevBtn = document.getElementById('prevSetBtn');
+        const nextBtn = document.getElementById('nextSetBtn');
+
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                this.navigateToPreviousSet();
+            });
+        }
+
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                this.navigateToNextSet();
+            });
+        }
+
+        // Кнопки в модальном окне паузы
+        const resumeBtn = document.getElementById('resumeWorkoutBtn');
+        const finishBtn = document.getElementById('finishWorkoutBtn');
+
+        if (resumeBtn) {
+            resumeBtn.addEventListener('click', () => {
+                this.resumeWorkout();
+            });
+        }
+
+        if (finishBtn) {
+            finishBtn.addEventListener('click', () => {
+                if (confirm('Завершить тренировку досрочно?')) {
+                    this.finishWorkoutEarly();
+                }
+            });
+        }
+    }
+
+    // Загружаем текущее упражнение
+    loadCurrentExercise() {
+        const container = document.getElementById('currentExerciseSection');
+        if (!container || !this.currentActiveWorkout) return;
+
+        const workout = this.currentActiveWorkout;
+        const currentExercise = workout.exercises[workout.currentExerciseIndex];
+        const currentSet = currentExercise.sets[workout.currentSetIndex];
+
+        // Подсчитываем прогресс в рамках текущего упражнения
+        const completedSetsInExercise = currentExercise.sets.filter(s => s.completed).length;
+        const exerciseProgressPercent = currentExercise.sets.length > 0
+            ? Math.round((completedSetsInExercise / currentExercise.sets.length) * 100)
+            : 0;
+
+        container.innerHTML = `
+            <div style="
+                background: var(--surface);
+                border-radius: 16px;
+                border: 3px solid ${workout.color};
+                padding: 20px;
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+                margin-bottom: 20px;
+            ">
+                <!-- Заголовок упражнения -->
+                <div style="margin-bottom: 16px;">
+                    <div style="font-size: 20px; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;">
+                        ${currentExercise.name}
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <span style="
+                            background: rgba(6, 180, 143, 0.1);
+                            color: var(--primary);
+                            padding: 4px 10px;
+                            border-radius: 10px;
+                            font-size: 12px;
+                            font-weight: 600;
+                        ">
+                            ${currentExercise.category}
+                        </span>
+                        <span style="
+                            background: ${this.hexToRgba(workout.color, 0.1)};
+                            color: ${workout.color};
+                            padding: 4px 10px;
+                            border-radius: 10px;
+                            font-size: 12px;
+                            font-weight: 600;
+                        ">
+                            Подход ${workout.currentSetIndex + 1}/${currentExercise.sets.length}
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Прогресс внутри упражнения -->
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">
+                        Прогресс в упражнении
+                    </div>
+                    <div style="
+                        width: 100%;
+                        height: 6px;
+                        background: var(--border-light);
+                        border-radius: 3px;
+                        overflow: hidden;
+                    ">
+                        <div style="
+                            width: ${exerciseProgressPercent}%;
+                            height: 100%;
+                            background: ${workout.color};
+                            border-radius: 3px;
+                            transition: width 0.3s ease;
+                        "></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
+                        <span>${completedSetsInExercise} выполнено</span>
+                        <span>${currentExercise.sets.length} всего</span>
+                    </div>
+                </div>
+                
+                <!-- Текущий подход -->
+                <div style="
+                    background: rgba(0, 0, 0, 0.02);
+                    border-radius: 12px;
+                    padding: 20px;
+                    margin-bottom: 20px;
+                    border: 2px solid ${currentSet.completed ? 'var(--success)' : workout.color};
+                ">
+                    <div style="text-align: center; margin-bottom: 16px;">
+                        <div style="font-size: 32px; font-weight: 800; color: var(--text-primary);">
+                            Подход ${workout.currentSetIndex + 1}
+                        </div>
+                        <div style="font-size: 14px; color: var(--text-secondary); margin-top: 4px;">
+                            ${currentSet.completed ? '✓ Выполнен' : 'Текущий подход'}
+                        </div>
+                    </div>
+                    
+                    <!-- Редактируемые поля для повторов и веса -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                        <!-- Повторения -->
+                        <div>
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600;">
+                                ПОВТОРЕНИЯ
+                            </div>
+                            <input type="number" 
+                                   id="currentSetReps" 
+                                   value="${currentSet.actualReps || currentSet.reps}" 
+                                   min="1" 
+                                   max="100"
+                                   style="
+                                        width: 100%;
+                                        padding: 14px;
+                                        border: 2px solid var(--border-light);
+                                        border-radius: 8px;
+                                        font-size: 18px;
+                                        font-weight: 700;
+                                        text-align: center;
+                                        background: ${currentSet.completed ? 'rgba(0, 0, 0, 0.02)' : 'var(--surface)'};
+                                        color: var(--text-primary);
+                                        outline: none;
+                                        ${currentSet.completed ? 'opacity: 0.7;' : ''}
+                                   "
+                                   ${currentSet.completed ? 'disabled' : ''}>
+                        </div>
+                        
+                        <!-- Вес -->
+                        <div>
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600;">
+                                ВЕС (КГ)
+                            </div>
+                            <input type="number" 
+                                   id="currentSetWeight" 
+                                   value="${currentSet.actualWeight || currentSet.weight}" 
+                                   min="0" 
+                                   max="500" 
+                                   step="0.5"
+                                   style="
+                                        width: 100%;
+                                        padding: 14px;
+                                        border: 2px solid var(--border-light);
+                                        border-radius: 8px;
+                                        font-size: 18px;
+                                        font-weight: 700;
+                                        text-align: center;
+                                        background: ${currentSet.completed ? 'rgba(0, 0, 0, 0.02)' : 'var(--surface)'};
+                                        color: var(--text-primary);
+                                        outline: none;
+                                        ${currentSet.completed ? 'opacity: 0.7;' : ''}
+                                   "
+                                   ${currentSet.completed ? 'disabled' : ''}>
+                        </div>
+                    </div>
+                    
+                    <!-- Чекбокс выполнения -->
+                    <div style="text-align: center;">
+                        <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" 
+                                   id="currentSetCheckbox" 
+                                   ${currentSet.completed ? 'checked' : ''}
+                                   style="display: none;">
+                            <div style="
+                                width: 24px;
+                                height: 24px;
+                                border: 2px solid ${currentSet.completed ? 'var(--success)' : 'var(--border-light)'};
+                                border-radius: 6px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                background: ${currentSet.completed ? 'var(--success)' : 'transparent'};
+                            ">
+                                ${currentSet.completed ? '✓' : ''}
+                            </div>
+                            <span style="font-size: 14px; color: var(--text-secondary); font-weight: 600;">
+                                Отметить как выполненный
+                            </span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Информация об отдыхе -->
+                <div style="
+                    background: rgba(255, 154, 118, 0.1);
+                    border: 2px solid rgba(255, 154, 118, 0.2);
+                    border-radius: 12px;
+                    padding: 16px;
+                    margin-top: 16px;
+                ">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div>
+                            <div style="font-size: 14px; font-weight: 600; color: var(--accent);">
+                                Отдых между подходами
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">
+                                Рекомендуемый отдых
+                            </div>
+                        </div>
+                        <div style="font-size: 20px; font-weight: 800; color: var(--accent);">
+                            ${currentExercise.restBetweenSets || 60} сек
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Добавляем обработчик для чекбокса
+        const checkbox = document.getElementById('currentSetCheckbox');
+        const repsInput = document.getElementById('currentSetReps');
+        const weightInput = document.getElementById('currentSetWeight');
+
+        if (checkbox) {
+            checkbox.addEventListener('change', (e) => {
+                this.toggleCurrentSetCompletion(e.target.checked);
+            });
+        }
+
+        if (repsInput) {
+            repsInput.addEventListener('input', (e) => {
+                this.updateCurrentSetReps(parseInt(e.target.value) || 0);
+            });
+        }
+
+        if (weightInput) {
+            weightInput.addEventListener('input', (e) => {
+                this.updateCurrentSetWeight(parseFloat(e.target.value) || 0);
+            });
+        }
+    }
+
+    // Загружаем следующие упражнения
+    loadUpcomingExercises() {
+        const container = document.getElementById('upcomingExercises');
+        if (!container || !this.currentActiveWorkout) return;
+
+        const workout = this.currentActiveWorkout;
+        const upcomingExercises = workout.exercises.slice(workout.currentExerciseIndex + 1);
+
+        if (upcomingExercises.length === 0) {
+            container.innerHTML = `
+                <div style="
+                    padding: 16px;
+                    background: var(--surface);
+                    border-radius: 12px;
+                    border: 2px dashed var(--border-light);
+                    color: var(--text-secondary);
+                    font-size: 14px;
+                    text-align: center;
+                    min-width: 150px;
+                ">
+                    Это последнее упражнение
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        upcomingExercises.forEach((exercise, index) => {
+            const globalIndex = workout.currentExerciseIndex + 1 + index;
+            const isNext = index === 0;
+
+            html += `
+                <div style="
+                    background: var(--surface);
+                    border-radius: 12px;
+                    border: 2px solid ${isNext ? workout.color : 'var(--border-light)'};
+                    padding: 12px;
+                    min-width: 140px;
+                    ${isNext ? 'transform: scale(1.05); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);' : ''}
+                ">
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">
+                        Упр. ${globalIndex + 1}
+                    </div>
+                    <div style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">
+                        ${exercise.name}
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-secondary);">
+                        ${exercise.sets.length} подходов
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    }
+
+    // Запускаем таймер тренировки
+    startWorkoutTimer(workout) {
+        const timerElement = document.getElementById('workoutTimer');
+        if (!timerElement || !workout) return;
+
+        // Останавливаем предыдущий таймер, если есть
+        if (workout.timer.interval) {
+            clearInterval(workout.timer.interval);
+        }
+
+        workout.timer.startTime = Date.now() - (workout.timer.elapsedSeconds * 1000);
+
+        // Обновляем таймер каждую секунду
+        workout.timer.interval = setInterval(() => {
+            const elapsed = Date.now() - workout.timer.startTime;
+            workout.timer.elapsedSeconds = Math.floor(elapsed / 1000);
+
+            const minutes = Math.floor(workout.timer.elapsedSeconds / 60);
+            const seconds = workout.timer.elapsedSeconds % 60;
+
+            timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }, 1000);
+    }
+
+    // Останавливаем таймер тренировки
+    stopWorkoutTimer() {
+        if (this.currentActiveWorkout && this.currentActiveWorkout.timer.interval) {
+            clearInterval(this.currentActiveWorkout.timer.interval);
+            this.currentActiveWorkout.timer.interval = null;
+        }
+    }
+
+    // Отмечаем текущий подход как выполненный
+    completeCurrentSet() {
+        if (!this.currentActiveWorkout) return;
+
+        const workout = this.currentActiveWorkout;
+        const currentExercise = workout.exercises[workout.currentExerciseIndex];
+        const currentSet = currentExercise.sets[workout.currentSetIndex];
+
+        // Если подход уже выполнен, переходим к следующему
+        if (currentSet.completed) {
+            this.navigateToNextSet();
+            return;
+        }
+
+        // Отмечаем подход как выполненный
+        currentSet.completed = true;
+        workout.completedSets++;
+
+        // Обновляем UI
+        this.updateProgressBar();
+        this.loadCurrentExercise();
+
+        // Показываем уведомление
+        this.showNotification('Подход выполнен!', 'success');
+
+        // Проверяем, выполнены ли все подходы в упражнении
+        const allSetsCompleted = currentExercise.sets.every(set => set.completed);
+
+        if (allSetsCompleted) {
+            // Автоматически переходим к следующему упражнению
+            setTimeout(() => {
+                this.navigateToNextExercise();
+            }, 1000);
+        } else {
+            // Автоматически переходим к следующему подходу
+            setTimeout(() => {
+                this.navigateToNextSet();
+            }, 800);
+        }
+    }
+
+    // Переключаем выполнение текущего подхода
+    toggleCurrentSetCompletion(completed) {
+        if (!this.currentActiveWorkout) return;
+
+        const workout = this.currentActiveWorkout;
+        const currentExercise = workout.exercises[workout.currentExerciseIndex];
+        const currentSet = currentExercise.sets[workout.currentSetIndex];
+
+        const wasCompleted = currentSet.completed;
+        currentSet.completed = completed;
+
+        // Обновляем счетчик выполненных подходов
+        if (completed && !wasCompleted) {
+            workout.completedSets++;
+        } else if (!completed && wasCompleted) {
+            workout.completedSets = Math.max(0, workout.completedSets - 1);
+        }
+
+        // Обновляем UI
+        this.updateProgressBar();
+        this.loadCurrentExercise();
+    }
+
+    // Обновляем повторения текущего подхода
+    updateCurrentSetReps(reps) {
+        if (!this.currentActiveWorkout) return;
+
+        const workout = this.currentActiveWorkout;
+        const currentExercise = workout.exercises[workout.currentExerciseIndex];
+        const currentSet = currentExercise.sets[workout.currentSetIndex];
+
+        currentSet.actualReps = reps;
+    }
+
+    // Обновляем вес текущего подхода
+    updateCurrentSetWeight(weight) {
+        if (!this.currentActiveWorkout) return;
+
+        const workout = this.currentActiveWorkout;
+        const currentExercise = workout.exercises[workout.currentExerciseIndex];
+        const currentSet = currentExercise.sets[workout.currentSetIndex];
+
+        currentSet.actualWeight = weight;
+    }
+
+    // Переходим к следующему подходу
+    navigateToNextSet() {
+        if (!this.currentActiveWorkout) return;
+
+        const workout = this.currentActiveWorkout;
+        const currentExercise = workout.exercises[workout.currentExerciseIndex];
+
+        // Проверяем, есть ли следующий подход в текущем упражнении
+        if (workout.currentSetIndex < currentExercise.sets.length - 1) {
+            workout.currentSetIndex++;
+            this.loadCurrentExercise();
+        } else {
+            // Если это последний подход в упражнении, переходим к следующему упражнению
+            this.navigateToNextExercise();
+        }
+    }
+
+    // Переходим к предыдущему подходу
+    navigateToPreviousSet() {
+        if (!this.currentActiveWorkout) return;
+
+        const workout = this.currentActiveWorkout;
+
+        // Проверяем, есть ли предыдущий подход
+        if (workout.currentSetIndex > 0) {
+            workout.currentSetIndex--;
+            this.loadCurrentExercise();
+        } else if (workout.currentExerciseIndex > 0) {
+            // Если это первый подход, переходим к предыдущему упражнению
+            workout.currentExerciseIndex--;
+            const prevExercise = workout.exercises[workout.currentExerciseIndex];
+            workout.currentSetIndex = prevExercise.sets.length - 1;
+            this.loadCurrentExercise();
+            this.loadUpcomingExercises();
+        }
+    }
+
+    // Переходим к следующему упражнению
+    navigateToNextExercise() {
+        if (!this.currentActiveWorkout) return;
+
+        const workout = this.currentActiveWorkout;
+
+        // Проверяем, есть ли следующее упражнение
+        if (workout.currentExerciseIndex < workout.exercises.length - 1) {
+            workout.currentExerciseIndex++;
+            workout.currentSetIndex = 0;
+            this.loadCurrentExercise();
+            this.loadUpcomingExercises();
+            this.showNotification('Переход к следующему упражнению', 'success');
+        } else {
+            // Если это последнее упражнение, завершаем тренировку
+            this.finishWorkout();
+        }
+    }
+
+    // Обновляем прогресс-бар
+    updateProgressBar() {
+        if (!this.currentActiveWorkout) return;
+
+        const workout = this.currentActiveWorkout;
+        const progressPercent = workout.totalSets > 0
+            ? Math.round((workout.completedSets / workout.totalSets) * 100)
+            : 0;
+
+        const progressBar = document.getElementById('workoutProgress');
+        if (progressBar) {
+            progressBar.style.width = `${progressPercent}%`;
+        }
+    }
+
+    // Пауза тренировки
+    pauseWorkout() {
+        // Останавливаем таймер
+        this.stopWorkoutTimer();
+
+        // Показываем модальное окно паузы
+        const pauseModal = document.getElementById('pauseModal');
+        if (pauseModal) {
+            pauseModal.style.display = 'flex';
+        }
+
+        // Запускаем таймер паузы
+        this.startPauseTimer();
+    }
+
+    // Возобновление тренировки
+    resumeWorkout() {
+        // Скрываем модальное окно паузы
+        const pauseModal = document.getElementById('pauseModal');
+        if (pauseModal) {
+            pauseModal.style.display = 'none';
+        }
+
+        // Останавливаем таймер паузы
+        this.stopPauseTimer();
+
+        // Возобновляем таймер тренировки
+        if (this.currentActiveWorkout) {
+            this.startWorkoutTimer(this.currentActiveWorkout);
+        }
+    }
+
+    // Запускаем таймер паузы
+    startPauseTimer() {
+        const pauseTimerElement = document.getElementById('pauseTimer');
+        if (!pauseTimerElement) return;
+
+        this.pauseStartTime = Date.now();
+
+        this.pauseInterval = setInterval(() => {
+            const elapsed = Date.now() - this.pauseStartTime;
+            const seconds = Math.floor(elapsed / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+
+            pauseTimerElement.textContent = `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }, 1000);
+    }
+
+    // Останавливаем таймер паузы
+    stopPauseTimer() {
+        if (this.pauseInterval) {
+            clearInterval(this.pauseInterval);
+            this.pauseInterval = null;
+        }
+    }
+
+    // Завершение тренировки досрочно
+    finishWorkoutEarly() {
+        if (confirm('Вы уверены, что хотите завершить тренировку досрочно?')) {
+            this.finishWorkout();
+        }
+    }
+
+    // Завершение тренировки (нормальное)
+    finishWorkout() {
+        // Останавливаем все таймеры
+        this.stopWorkoutTimer();
+        this.stopPauseTimer();
+
+        // Скрываем модальное окно паузы, если открыто
+        const pauseModal = document.getElementById('pauseModal');
+        if (pauseModal) {
+            pauseModal.style.display = 'none';
+        }
+
+        // Сохраняем результаты тренировки
+        this.saveWorkoutResults();
+
+        // Показываем навигацию
+        this.toggleUIForWorkout(true);
+
+        // Возвращаемся к списку тренировок
+        this.showWorkoutsSection();
+
+        // Показываем уведомление
+        const workout = this.currentActiveWorkout;
+        const skinsEarned = workout ? workout.exercises.length * 3 : 0;
+        this.showNotification(`Тренировка завершена! +${skinsEarned}✨`, 'skins');
+
+        // Очищаем текущую тренировку
+        this.currentActiveWorkout = null;
+    }
+
+    // Сохранение результатов тренировки
+    saveWorkoutResults() {
+        if (!this.currentActiveWorkout) return;
+
+        const workout = this.currentActiveWorkout;
+        const completedExercises = workout.exercises.filter(ex =>
+            ex.sets.some(set => set.completed)
+        ).length;
+
+        // Сохраняем в историю
+        let history = JSON.parse(localStorage.getItem('healthflow_workout_history') || '[]');
+        history.unshift({
+            workoutId: workout.id,
+            workoutName: workout.name,
+            date: new Date().toISOString(),
+            duration: Math.floor(workout.timer.elapsedSeconds / 60),
+            exercisesCompleted: completedExercises,
+            totalExercises: workout.exercises.length,
+            setsCompleted: workout.completedSets,
+            totalSets: workout.totalSets,
+            skinsEarned: completedExercises * 3
+        });
+
+        if (history.length > 50) {
+            history = history.slice(0, 50);
+        }
+
+        localStorage.setItem('healthflow_workout_history', JSON.stringify(history));
+
+        // Обновляем тренировку
+        let workouts = JSON.parse(localStorage.getItem('healthflow_workouts') || '[]');
+        const workoutIndex = workouts.findIndex(w => w.id === workout.id);
+
+        if (workoutIndex !== -1) {
+            workouts[workoutIndex].lastCompleted = new Date().toISOString();
+            localStorage.setItem('healthflow_workouts', JSON.stringify(workouts));
+        }
+
+        // Добавляем скинты
+        this.addSkins(completedExercises * 3, 'workout_completed');
+    }
+
+
+
 }
 
 // Создаём и экспортируем экземпляр приложения
@@ -4203,6 +5188,59 @@ style.textContent = `
     
     .muscle-group-tag {
         animation: tagAppear 0.3s ease-out;
+    }
+
+
+
+
+`;
+
+style.textContent += `
+    /* Стили для экрана тренировки */
+    #workoutTimer {
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    #completeSetBtn:active {
+        transform: scale(0.98);
+    }
+    
+    /* Анимация для выполнения подхода */
+    @keyframes setCompleted {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    
+    .set-completed {
+        animation: setCompleted 0.5s ease;
+    }
+    
+    /* Стили для инпутов в режиме тренировки */
+    input[type="number"] {
+        -moz-appearance: textfield;
+    }
+    
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    
+    /* Плавная прокрутка */
+    #upcomingExercises {
+        scroll-behavior: smooth;
+    }
+    
+    /* Адаптивные стили для тренировки */
+    @media (max-width: 500px) {
+        #workoutTimer {
+            font-size: 28px;
+        }
+        
+        #currentExerciseSection {
+            padding: 12px;
+        }
     }
 `;
 document.head.appendChild(style);
