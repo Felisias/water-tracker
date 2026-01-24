@@ -85,11 +85,11 @@ class HealthFlowApp {
         const container = document.getElementById('currentPage');
         
         try {
-            // Для модуля воды загружаем отдельно
             if (pageId === 'water') {
                 await this.loadWaterPage(container);
+            } else if (pageId === 'workouts') {
+                await this.loadWorkoutsPage(container); // ИЗМЕНЕНИЕ ЗДЕСЬ
             } else {
-                // Для других страниц показываем заглушки
                 container.innerHTML = this.getPageStub(pageId);
             }
         } catch (error) {
@@ -286,6 +286,62 @@ class HealthFlowApp {
                 });
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    async loadWorkoutsPage(container) {
+        // Загружаем HTML для тренировок
+        const response = await fetch('workouts.html');
+        const html = await response.text();
+        
+        // Вставляем HTML
+        container.innerHTML = html;
+        
+        // Загружаем и инициализируем модуль упражнений
+        await this.loadExercisesModule();
+    }
+    
+    async loadExercisesModule() {
+        try {
+            // Загружаем модуль упражнений
+            const module = await import('./exercises.js');
+            
+            // Инициализируем модуль
+            if (module && module.initExercises) {
+                await module.initExercises();
+                console.log('✅ Модуль упражнений загружен');
+            }
+        } catch (error) {
+            console.error('❌ Ошибка загрузки модуля упражнений:', error);
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
 }
 
 // Создаём и экспортируем экземпляр приложения
@@ -295,3 +351,4 @@ window.healthFlow = new HealthFlowApp();
 document.addEventListener('DOMContentLoaded', () => {
     window.healthFlow.init();
 });
+
