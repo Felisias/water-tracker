@@ -126,6 +126,7 @@ class HealthFlowApp {
     }
 
     // СТРАНИЦА ТРЕНИРОВОК С РАЗДЕЛАМИ
+    // СТРАНИЦА ТРЕНИРОВОК С РАЗДЕЛАМИ
     showWorkoutsPage(container) {
         console.log('Показываем страницу тренировок...');
 
@@ -159,25 +160,7 @@ class HealthFlowApp {
                         <!-- Здесь будет меняться контент -->
                     </div>
                     
-                    <!-- История тренировок -->
-                    <div style="margin-top: 30px;">
-                        <div style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid var(--border-light);">
-                            История тренировок
-                        </div>
-                        <div id="workoutsHistory" style="
-                            background: var(--surface);
-                            border-radius: 12px;
-                            border: 2px solid var(--border-light);
-                            min-height: 100px;
-                            padding: 20px;
-                        ">
-                            <div style="text-align: center; padding: 30px 20px;">
-                                <div style="font-size: 32px; opacity: 0.3; margin-bottom: 10px;">📅</div>
-                                <div style="color: var(--text-secondary); font-size: 16px;">Тренировок пока нет</div>
-                                <div style="color: var(--text-light); font-size: 14px; margin-top: 5px;">Начните первую тренировку!</div>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- История тренировок будет добавляться только в разделе тренировок -->
                 </div>
             </div>
         `;
@@ -228,6 +211,7 @@ class HealthFlowApp {
     }
 
     // Показываем раздел упражнений
+    // Показываем раздел упражнений
     showExercisesSection() {
         const contentContainer = document.getElementById('workoutsContent');
         if (!contentContainer) return;
@@ -257,6 +241,57 @@ class HealthFlowApp {
                 </button>
             </div>
             
+            <!-- Поиск упражнений -->
+            <div style="margin-bottom: 20px;">
+                <input type="text" 
+                       id="exercisesSearch" 
+                       placeholder="🔍 Поиск по названию..." 
+                       style="
+                            width: 100%;
+                            padding: 14px;
+                            border: 2px solid var(--border-light);
+                            border-radius: 10px;
+                            font-size: 15px;
+                            font-family: inherit;
+                            background: var(--surface);
+                            color: var(--text-primary);
+                            outline: none;
+                            margin-bottom: 12px;
+                       ">
+                
+                <!-- Фильтры по группам мышц -->
+                <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px;">
+                    <button class="exercises-muscle-filter" data-group="Все" style="
+                        padding: 8px 14px;
+                        border: 2px solid var(--primary);
+                        border-radius: 20px;
+                        background: rgba(6, 180, 143, 0.1);
+                        color: var(--primary);
+                        font-size: 13px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        white-space: nowrap;
+                    ">
+                        Все
+                    </button>
+                    ${['Грудь', 'Спина', 'Ноги', 'Плечи', 'Бицепс', 'Трицепс', 'Пресс', 'Ягодицы', 'Кардио', 'Все тело'].map(group => `
+                        <button class="exercises-muscle-filter" data-group="${group}" style="
+                            padding: 8px 14px;
+                            border: 2px solid var(--border-light);
+                            border-radius: 20px;
+                            background: var(--surface);
+                            color: var(--text-primary);
+                            font-size: 13px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            white-space: nowrap;
+                        ">
+                            ${group}
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+            
             <!-- Список упражнений -->
             <div id="exercisesList" style="
                 background: var(--surface);
@@ -277,10 +312,14 @@ class HealthFlowApp {
             });
         }
 
+        // Инициализируем поиск и фильтры
+        this.initializeExercisesSearch();
+
         // Загружаем упражнения
         this.loadExercises();
     }
 
+    // Показываем раздел тренировок
     // Показываем раздел тренировок
     showWorkoutsSection() {
         const contentContainer = document.getElementById('workoutsContent');
@@ -318,11 +357,32 @@ class HealthFlowApp {
                 border: 2px solid var(--border-light);
                 min-height: 200px;
                 padding: 20px;
+                margin-bottom: 30px;
             ">
                 <div style="text-align: center; padding: 40px 20px;">
                     <div style="font-size: 32px; opacity: 0.3; margin-bottom: 10px;">🏋️</div>
                     <div style="color: var(--text-secondary); font-size: 16px;">Тренировок пока нет</div>
                     <div style="color: var(--text-light); font-size: 14px; margin-top: 5px;">Создайте первую тренировку!</div>
+                </div>
+            </div>
+            
+            <!-- История тренировок -->
+            <div style="margin-top: 30px;">
+                <div style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid var(--border-light);">
+                    История тренировок
+                </div>
+                <div id="workoutsHistory" style="
+                    background: var(--surface);
+                    border-radius: 12px;
+                    border: 2px solid var(--border-light);
+                    min-height: 100px;
+                    padding: 20px;
+                ">
+                    <div style="text-align: center; padding: 30px 20px;">
+                        <div style="font-size: 32px; opacity: 0.3; margin-bottom: 10px;">📅</div>
+                        <div style="color: var(--text-secondary); font-size: 16px;">Тренировок пока нет</div>
+                        <div style="color: var(--text-light); font-size: 14px; margin-top: 5px;">Начните первую тренировку!</div>
+                    </div>
                 </div>
             </div>
         `;
@@ -337,6 +397,9 @@ class HealthFlowApp {
 
         // Загружаем тренировки
         this.loadWorkouts();
+
+        // Загружаем историю тренировок
+        this.loadWorkoutsHistory();
     }
 
     // === ФОРМА СОЗДАНИЯ УПРАЖНЕНИЯ ===
@@ -1258,11 +1321,8 @@ class HealthFlowApp {
 
     // Отрисовка упражнения с подходами
     // Отрисовка упражнения с подходами
+    // Отрисовка упражнения с подходами
     renderExerciseWithSets(exercise, exerciseIndex) {
-        const totalSets = exercise.sets.length;
-        const totalReps = exercise.sets.reduce((sum, set) => sum + (set.reps || 0), 0);
-        const avgWeight = exercise.sets.reduce((sum, set) => sum + (set.weight || 0), 0) / totalSets || 0;
-
         return `
             <div class="exercise-with-sets" 
                  data-exercise-index="${exerciseIndex}"
@@ -1292,13 +1352,13 @@ class HealthFlowApp {
                     cursor: grab;
                 ">⋮⋮</div>
                 
-                <!-- Заголовок упражнения -->
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                <!-- Заголовок упражнения с отдыхом -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
                     <div style="flex: 1;">
-                        <div style="font-weight: 700; color: var(--text-primary); font-size: 16px; margin-bottom: 4px;">
+                        <div style="font-weight: 700; color: var(--text-primary); font-size: 16px; margin-bottom: 6px;">
                             ${exercise.name}
                         </div>
-                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;">
                             <span style="
                                 background: rgba(6, 180, 143, 0.1);
                                 color: var(--primary);
@@ -1322,6 +1382,33 @@ class HealthFlowApp {
                                 </span>
                             `).join('')}
                         </div>
+                        
+                        <!-- Отдых между подходами -->
+                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+                            <div style="font-size: 12px; color: var(--text-secondary); font-weight: 600;">
+                                Отдых между подходами:
+                            </div>
+                            <input type="number" 
+                                   class="exercise-rest-input" 
+                                   data-exercise-index="${exerciseIndex}"
+                                   value="${exercise.restBetweenSets || 60}" 
+                                   min="0" 
+                                   max="300"
+                                   style="
+                                        width: 80px;
+                                        padding: 6px 8px;
+                                        border: 2px solid var(--border-light);
+                                        border-radius: 6px;
+                                        font-size: 13px;
+                                        text-align: center;
+                                        background: var(--surface);
+                                        color: var(--text-primary);
+                                        outline: none;
+                                   ">
+                            <div style="font-size: 12px; color: var(--text-secondary);">
+                                сек
+                            </div>
+                        </div>
                     </div>
                     <button class="remove-exercise-btn" data-exercise-index="${exerciseIndex}" style="
                         background: rgba(255, 107, 107, 0.1);
@@ -1336,29 +1423,6 @@ class HealthFlowApp {
                     ">
                         Удалить
                     </button>
-                </div>
-                
-                <!-- Статистика упражнения -->
-                <div style="
-                    display: flex;
-                    gap: 12px;
-                    margin-bottom: 12px;
-                    padding: 8px;
-                    background: rgba(0, 0, 0, 0.02);
-                    border-radius: 8px;
-                ">
-                    <div style="text-align: center; flex: 1;">
-                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 2px;">Подходы</div>
-                        <div style="font-weight: 700; color: var(--primary); font-size: 16px;">${totalSets}</div>
-                    </div>
-                    <div style="text-align: center; flex: 1;">
-                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 2px;">Повторения</div>
-                        <div style="font-weight: 700; color: var(--primary); font-size: 16px;">${totalReps}</div>
-                    </div>
-                    <div style="text-align: center; flex: 1;">
-                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 2px;">Вес (кг)</div>
-                        <div style="font-weight: 700; color: var(--primary); font-size: 16px;">${avgWeight.toFixed(1)}</div>
-                    </div>
                 </div>
                 
                 <!-- Подходы упражнения -->
@@ -1397,6 +1461,7 @@ class HealthFlowApp {
     }
 
 
+    // Отрисовка отдельного подхода
     // Отрисовка отдельного подхода
     renderSetItem(exerciseIndex, setIndex, set) {
         return `
@@ -1445,7 +1510,7 @@ class HealthFlowApp {
                     ${setIndex + 1}
                 </div>
                 
-                <div style="flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                <div style="flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
                     <!-- Повторения -->
                     <div>
                         <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; font-weight: 600;">
@@ -1497,44 +1562,18 @@ class HealthFlowApp {
                                ">
                     </div>
                     
-                    <!-- Отдых между подходами -->
+                    <!-- Примечания (опционально) -->
                     <div>
                         <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; font-weight: 600;">
-                            Отдых подход (сек)
+                            Примечания
                         </div>
-                        <input type="number" 
-                               class="set-rest-between-sets-input" 
+                        <input type="text" 
+                               class="set-notes-input" 
                                data-exercise-index="${exerciseIndex}"
                                data-set-index="${setIndex}"
-                               value="${set.restBetweenSets || 60}" 
-                               min="0" 
-                               max="300"
-                               style="
-                                    width: 100%;
-                                    padding: 8px;
-                                    border: 2px solid var(--border-light);
-                                    border-radius: 6px;
-                                    font-size: 14px;
-                                    text-align: center;
-                                    background: var(--surface);
-                                    color: var(--text-primary);
-                                    outline: none;
-                               ">
-                    </div>
-                    
-                    <!-- Отдых между повторениями -->
-                    <div>
-                        <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; font-weight: 600;">
-                            Отдых повтор (сек)
-                        </div>
-                        <input type="number" 
-                               class="set-rest-between-reps-input" 
-                               data-exercise-index="${exerciseIndex}"
-                               data-set-index="${setIndex}"
-                               value="${set.restBetweenReps || 2}" 
-                               min="0" 
-                               max="10" 
-                               step="0.5"
+                               value="${set.notes || ''}" 
+                               placeholder="Легко/Тяжело"
+                               maxlength="20"
                                style="
                                     width: 100%;
                                     padding: 8px;
@@ -2121,8 +2160,9 @@ class HealthFlowApp {
                             name: exercise.name,
                             category: exercise.category,
                             muscleGroups: exercise.muscleGroups || [],
+                            restBetweenSets: 60, // Отдых по умолчанию
                             sets: [
-                                { reps: 12, weight: 0 } // Первый подход по умолчанию
+                                { reps: 12, weight: 0, notes: '' }
                             ]
                         });
                     }
@@ -2164,6 +2204,7 @@ class HealthFlowApp {
 
     // Инициализация контролов для упражнений (удаление, добавление подходов и т.д.)
     // Инициализация контролов для упражнений
+    // Инициализация контролов для упражнений
     initializeExerciseControls() {
         // Удаление упражнения
         document.querySelectorAll('.remove-exercise-btn').forEach(btn => {
@@ -2183,8 +2224,7 @@ class HealthFlowApp {
                 this.currentWorkoutData.exercises[exerciseIndex].sets.push({
                     reps: 12,
                     weight: 0,
-                    restBetweenSets: 60,
-                    restBetweenReps: 2
+                    notes: ''
                 });
                 this.showWorkoutFormStage2();
             });
@@ -2206,8 +2246,17 @@ class HealthFlowApp {
             });
         });
 
+        // Обработка отдыха между подходами
+        document.querySelectorAll('.exercise-rest-input').forEach(input => {
+            input.addEventListener('input', (e) => {
+                const exerciseIndex = parseInt(e.target.dataset.exerciseIndex);
+                const value = parseInt(e.target.value) || 60;
+                this.currentWorkoutData.exercises[exerciseIndex].restBetweenSets = value;
+            });
+        });
+
         // Обработка изменений в подходах
-        document.querySelectorAll('.set-reps-input, .set-weight-input, .set-rest-between-sets-input, .set-rest-between-reps-input').forEach(input => {
+        document.querySelectorAll('.set-reps-input, .set-weight-input, .set-notes-input').forEach(input => {
             input.addEventListener('input', (e) => {
                 const exerciseIndex = parseInt(e.target.dataset.exerciseIndex);
                 const setIndex = parseInt(e.target.dataset.setIndex);
@@ -2215,11 +2264,10 @@ class HealthFlowApp {
 
                 if (e.target.classList.contains('set-reps-input')) field = 'reps';
                 else if (e.target.classList.contains('set-weight-input')) field = 'weight';
-                else if (e.target.classList.contains('set-rest-between-sets-input')) field = 'restBetweenSets';
-                else if (e.target.classList.contains('set-rest-between-reps-input')) field = 'restBetweenReps';
+                else if (e.target.classList.contains('set-notes-input')) field = 'notes';
                 else return;
 
-                const value = parseFloat(e.target.value) || 0;
+                const value = field === 'notes' ? e.target.value : parseFloat(e.target.value) || 0;
                 this.currentWorkoutData.exercises[exerciseIndex].sets[setIndex][field] = value;
             });
         });
@@ -2249,6 +2297,7 @@ class HealthFlowApp {
                 name: ex.name,
                 category: ex.category,
                 muscleGroups: ex.muscleGroups,
+                restBetweenSets: ex.restBetweenSets || 60, // Добавляем отдых
                 sets: ex.sets // Сохраняем подходы с весом и повторениями
             })),
             createdAt: new Date().toISOString(),
@@ -2294,6 +2343,7 @@ class HealthFlowApp {
                 name: ex.name,
                 category: ex.category,
                 muscleGroups: ex.muscleGroups,
+                restBetweenSets: ex.restBetweenSets || 60, // Добавляем отдых
                 sets: ex.sets
             }))
         };
@@ -2503,6 +2553,7 @@ class HealthFlowApp {
     }
 
     // Загрузка списка упражнений (без изменений)
+    // Загрузка списка упражнений
     loadExercises() {
         const container = document.getElementById('exercisesList');
         if (!container) return;
@@ -2520,94 +2571,95 @@ class HealthFlowApp {
             return;
         }
 
-        let html = '<div style="display: grid; gap: 12px;">';
+        this.filterExercisesList();
+    }
 
-        exercises.forEach((exercise, index) => {
-            html += `
-                <div style="
-                    background: var(--surface);
-                    border: 2px solid var(--border-light);
-                    border-radius: 12px;
-                    padding: 16px;
-                    opacity: 0;
-                    animation: fadeIn 0.3s ease-out ${index * 0.1}s forwards;
-                    transition: all 0.2s ease;
-                ">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
-                        <div style="flex: 1;">
-                            <div style="font-weight: 700; color: var(--text-primary); font-size: 17px; margin-bottom: 4px;">
-                                ${exercise.name}
-                            </div>
-                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+
+
+
+    // Отрисовка упражнения в списке упражнений
+    renderExerciseItem(exercise, index) {
+        return `
+            <div style="
+                background: var(--surface);
+                border: 2px solid var(--border-light);
+                border-radius: 12px;
+                padding: 16px;
+                opacity: 0;
+                animation: fadeIn 0.3s ease-out ${index * 0.1}s forwards;
+                transition: all 0.2s ease;
+            ">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; color: var(--text-primary); font-size: 17px; margin-bottom: 4px;">
+                            ${exercise.name}
+                        </div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <span style="
+                                background: rgba(6, 180, 143, 0.1);
+                                color: var(--primary);
+                                padding: 4px 10px;
+                                border-radius: 10px;
+                                font-size: 12px;
+                                font-weight: 600;
+                            ">
+                                ${exercise.category}
+                            </span>
+                            ${exercise.muscleGroups && exercise.muscleGroups.map(group => `
                                 <span style="
-                                    background: rgba(6, 180, 143, 0.1);
-                                    color: var(--primary);
+                                    background: rgba(108, 92, 231, 0.1);
+                                    color: #6C5CE7;
                                     padding: 4px 10px;
                                     border-radius: 10px;
                                     font-size: 12px;
                                     font-weight: 600;
                                 ">
-                                    ${exercise.category}
+                                    ${group}
                                 </span>
-                                ${exercise.muscleGroups && exercise.muscleGroups.map(group => `
-                                    <span style="
-                                        background: rgba(108, 92, 231, 0.1);
-                                        color: #6C5CE7;
-                                        padding: 4px 10px;
-                                        border-radius: 10px;
-                                        font-size: 12px;
-                                        font-weight: 600;
-                                    ">
-                                        ${group}
-                                    </span>
-                                `).join('')}
-                            </div>
+                            `).join('')}
                         </div>
-                        <button onclick="window.healthFlow.deleteExercise(${exercise.id})" style="
-                            background: rgba(255, 107, 107, 0.1);
-                            border: none;
-                            color: var(--remove);
-                            padding: 6px 12px;
-                            border-radius: 8px;
-                            font-size: 13px;
-                            font-weight: 600;
-                            cursor: pointer;
-                            transition: all 0.2s ease;
-                        ">
-                            Удалить
-                        </button>
                     </div>
-                    
-                    ${exercise.description ? `
-                        <div style="
-                            color: var(--text-secondary);
-                            font-size: 14px;
-                            line-height: 1.5;
-                            padding: 12px;
-                            background: rgba(0, 0, 0, 0.02);
-                            border-radius: 8px;
-                            margin-top: 10px;
-                        ">
-                            ${exercise.description}
-                        </div>
-                    ` : ''}
-                    
-                    ${exercise.image ? `
-                        <div style="margin-top: 12px;">
-                            <img src="${exercise.image}" alt="${exercise.name}" style="
-                                width: 100%;
-                                max-height: 200px;
-                                object-fit: cover;
-                                border-radius: 8px;
-                            ">
-                        </div>
-                    ` : ''}
+                    <button onclick="window.healthFlow.deleteExercise(${exercise.id})" style="
+                        background: rgba(255, 107, 107, 0.1);
+                        border: none;
+                        color: var(--remove);
+                        padding: 6px 12px;
+                        border-radius: 8px;
+                        font-size: 13px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                    ">
+                        Удалить
+                    </button>
                 </div>
-            `;
-        });
-
-        html += '</div>';
-        container.innerHTML = html;
+                
+                ${exercise.description ? `
+                    <div style="
+                        color: var(--text-secondary);
+                        font-size: 14px;
+                        line-height: 1.5;
+                        padding: 12px;
+                        background: rgba(0, 0, 0, 0.02);
+                        border-radius: 8px;
+                        margin-top: 10px;
+                    ">
+                        ${exercise.description}
+                    </div>
+                ` : ''}
+                
+                ${exercise.image ? `
+                    <div style="margin-top: 12px;">
+                        <img src="${exercise.image}" alt="${exercise.name}" style="
+                            width: 100%;
+                            max-height: 200px;
+                            object-fit: cover;
+                            border-radius: 8px;
+                        ">
+                    </div>
+                ` : ''}
+            </div>
+        `;
     }
 
     // Остальные методы без изменений
@@ -2889,6 +2941,7 @@ class HealthFlowApp {
     }
 
     // Редактирование тренировки
+    // Редактирование тренировки
     editWorkout(workoutId) {
         const workouts = JSON.parse(localStorage.getItem('healthflow_workouts') || '[]');
         const workout = workouts.find(w => w.id === workoutId);
@@ -2909,11 +2962,12 @@ class HealthFlowApp {
                 name: ex.name,
                 category: ex.category,
                 muscleGroups: ex.muscleGroups || [],
-                sets: ex.sets || [{ reps: 12, weight: 0, restBetweenSets: 60, restBetweenReps: 2 }]
+                restBetweenSets: ex.restBetweenSets || 60, // Загружаем отдых
+                sets: ex.sets || [{ reps: 12, weight: 0, notes: '' }]
             }))
         };
 
-        this.showWorkoutFormStage2(); // Показываем сразу вторую стадию для редактирования
+        this.showWorkoutFormStage2();
     }
 
     showProfilePage(container) {
