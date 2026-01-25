@@ -5555,7 +5555,172 @@ class HealthFlowApp {
             });
         }
     }
+
+
+    // ДОБАВЬ ЭТИ МЕТОДЫ В КОНЕЦ КЛАССА HealthFlowApp (перед последней })
+
+    // Инициализация страницы тренировок
+    initializeWorkoutsPage() {
+        console.log('Инициализация страницы тренировок...');
+
+        const createBtn = document.getElementById('createWorkoutBtn');
+        if (createBtn) {
+            createBtn.addEventListener('click', () => {
+                this.showCreateWorkoutForm();
+            });
+        }
+
+        this.loadWorkouts();
+        this.loadWorkoutsHistory();
+    }
+
+    // Создание тренировки
+    showCreateWorkoutForm() {
+        console.log('Показываем форму создания тренировки...');
+        alert('Функция создания тренировки скоро появится!');
+        // Пока просто показываем уведомление
+        this.showNotification('Функция создания тренировки скоро появится!', 'success');
+    }
+
+    // Создание упражнения
+    showCreateExerciseForm() {
+        console.log('Показываем форму создания упражнения...');
+
+        // Простейшая реализация через prompt
+        const name = prompt('Введите название упражнения:');
+        if (!name || !name.trim()) return;
+
+        const category = prompt('Выберите категорию (Кардио, Силовые, Растяжка, Йога, Другое):', 'Кардио');
+        const muscleGroupsInput = prompt('Введите группы мышц через запятую (например: Грудь, Трицепс):');
+        const description = prompt('Описание (необязательно):', '');
+
+        const muscleGroups = muscleGroupsInput
+            ? muscleGroupsInput.split(',').map(g => g.trim()).filter(g => g)
+            : [];
+
+        // Сохраняем упражнение
+        let exercises = JSON.parse(localStorage.getItem('healthflow_exercises') || '[]');
+        exercises.push({
+            id: Date.now(),
+            name: name.trim(),
+            category: category || 'Кардио',
+            muscleGroups: muscleGroups,
+            description: description || '',
+            difficulty: 'Средний',
+            createdAt: new Date().toISOString()
+        });
+
+        localStorage.setItem('healthflow_exercises', JSON.stringify(exercises));
+
+        this.showNotification(`Упражнение "${name}" создано!`, 'success');
+
+        // Обновляем страницу упражнений
+        const container = document.getElementById('currentPage');
+        if (container) {
+            this.showExercisesPage(container);
+        }
+    }
+
+    // Удаление упражнения
+    deleteExercise(id) {
+        if (!confirm('Удалить это упражнение?')) return;
+
+        let exercises = JSON.parse(localStorage.getItem('healthflow_exercises') || '[]');
+        exercises = exercises.filter(ex => ex.id !== id);
+        localStorage.setItem('healthflow_exercises', JSON.stringify(exercises));
+
+        this.showNotification('Упражнение удалено', 'success');
+
+        // Обновляем страницу упражнений
+        const container = document.getElementById('currentPage');
+        if (container) {
+            this.showExercisesPage(container);
+        }
+    }
+
+    // Редактирование упражнения (простая версия)
+    editExercise(id) {
+        const exercises = JSON.parse(localStorage.getItem('healthflow_exercises') || '[]');
+        const exercise = exercises.find(ex => ex.id === id);
+
+        if (!exercise) {
+            this.showNotification('Упражнение не найдено!', 'error');
+            return;
+        }
+
+        const name = prompt('Название упражнения:', exercise.name);
+        if (!name || !name.trim()) return;
+
+        const category = prompt('Категория:', exercise.category);
+        const muscleGroupsInput = prompt('Группы мышц через запятую:',
+            exercise.muscleGroups ? exercise.muscleGroups.join(', ') : '');
+        const description = prompt('Описание:', exercise.description || '');
+
+        const muscleGroups = muscleGroupsInput
+            ? muscleGroupsInput.split(',').map(g => g.trim()).filter(g => g)
+            : [];
+
+        // Обновляем упражнение
+        exercise.name = name.trim();
+        exercise.category = category || exercise.category;
+        exercise.muscleGroups = muscleGroups;
+        exercise.description = description || '';
+        exercise.updatedAt = new Date().toISOString();
+
+        localStorage.setItem('healthflow_exercises', JSON.stringify(exercises));
+
+        this.showNotification(`Упражнение "${name}" обновлено!`, 'success');
+
+        // Обновляем страницу упражнений
+        const container = document.getElementById('currentPage');
+        if (container) {
+            this.showExercisesPage(container);
+        }
+    }
 }
+
+
+
+
+
+
+// ДОБАВЬ ЭТОТ КОД В САМЫЙ КОНЕЦ ФАЙЛА (после класса HealthFlowApp)
+
+// Добавляем обработчики для кнопок при загрузке DOM
+document.addEventListener('DOMContentLoaded', function () {
+    // Обработчик для кнопки создания упражнения
+    document.addEventListener('click', function (e) {
+        if (e.target &&
+            (e.target.id === 'createExerciseBtn' ||
+                e.target.closest('#createExerciseBtn') ||
+                e.target.textContent.includes('Новое упражнение'))) {
+
+            if (window.healthFlow && window.healthFlow.showCreateExerciseForm) {
+                e.preventDefault();
+                window.healthFlow.showCreateExerciseForm();
+            }
+        }
+
+        // Обработчик для кнопки создания тренировки
+        if (e.target &&
+            (e.target.id === 'createWorkoutBtn' ||
+                e.target.closest('#createWorkoutBtn') ||
+                e.target.textContent.includes('Новая тренировка'))) {
+
+            if (window.healthFlow && window.healthFlow.showCreateWorkoutForm) {
+                e.preventDefault();
+                window.healthFlow.showCreateWorkoutForm();
+            }
+        }
+    });
+
+    // Простая функция для показа уведомлений
+    window.showSimpleNotification = function (message) {
+        alert(message);
+    };
+});
+
+console.log('✅ Обработчики кнопок добавлены');
 
 // Создаём и экспортируем экземпляр приложения
 window.healthFlow = new HealthFlowApp();
@@ -5707,6 +5872,9 @@ style.textContent = `
 
 
 `;
+
+
+
 
 document.head.appendChild(style);
 
