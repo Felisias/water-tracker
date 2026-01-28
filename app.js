@@ -2,7 +2,7 @@
 class HealthFlowApp {
     constructor() {
         this.state = {
-            currentPage: 'workouts',  // Было 'water'
+            currentPage: 'workouts',  // Было 'water' .
             totalSkins: 0,
             theme: 'cozy'
         };
@@ -5616,5 +5616,6 @@ style.textContent = `
 `;
 
 document.head.appendChild(style);
+
 
 
