@@ -5630,5 +5630,28 @@ style.textContent = `
 
 `;
 
+
+
+
+
+// Регистрация Service Worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('./sw.js')
+            .then(function(registration) {
+                console.log('✅ Service Worker зарегистрирован:', registration.scope);
+                
+                // Проверяем обновления
+                registration.addEventListener('updatefound', () => {
+                    console.log('🔄 Найдено обновление Service Worker');
+                });
+            })
+            .catch(function(error) {
+                console.log('❌ Ошибка регистрации Service Worker:', error);
+            });
+    });
+}
+
 document.head.appendChild(style);
+
 
