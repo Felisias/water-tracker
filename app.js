@@ -26,9 +26,9 @@ class HealthFlowApp {
             if (pageId === 'workouts') {
                 this.showWorkoutsPage(container);
             } else if (pageId === 'exercises') {
-                this.showExercisesPage(container); // ЧИСТАЯ страница упражнений
+                this.showExercisesPage(container);
             } else if (pageId === 'profile') {
-                this.showProfilePage(container); // ЧИСТАЯ страница профиля
+                this.showProfilePage(container);
             } else {
                 container.innerHTML = `<div>Страница не найдена</div>`;
             }
@@ -39,7 +39,7 @@ class HealthFlowApp {
     }
 
     async init() {
-        console.log('🚀 Инициализация HealthFlow Workouts...'); // ИЗМЕНИЛОСЬ
+        console.log('🚀 Инициализация HealthFlow Workouts...');
 
         // Загружаем состояние
         this.loadState();
@@ -48,7 +48,7 @@ class HealthFlowApp {
         this.createPageContainer();
 
         // Загружаем текущую страницу - ТЕПЕРЬ ТРЕНИРОВКИ
-        await this.loadPage('workouts'); // ИЗМЕНИЛОСЬ: было 'water'
+        await this.loadPage('workouts'); // БЫЛО: 'water'
 
         // Настраиваем навигацию
         this.setupNavigation();
@@ -56,7 +56,7 @@ class HealthFlowApp {
         // Настраиваем Service Worker
         this.setupServiceWorker();
 
-        console.log('✅ HealthFlow Workouts запущен'); // ИЗМЕНИЛОСЬ
+        console.log('✅ HealthFlow Workouts запущен');
     }
 
     loadState() {
