@@ -7,6 +7,7 @@ const urlsToCache = [
     '/healthflow/style.css',
     '/healthflow/app.js',
     '/healthflow/manifest.json'
+    // НЕ добавлять water.html и water.js - их больше нет
 ];
 
 self.addEventListener('install', event => {
@@ -59,4 +60,3 @@ self.addEventListener('fetch', event => {
             })
     );
 });
-
