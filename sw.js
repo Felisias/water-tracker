@@ -2,13 +2,10 @@ const CACHE_NAME = 'healthflow-v1';
 const urlsToCache = [
     '/healthflow/',
     '/healthflow/index.html',
-    '/healthflow/water.html',
     '/healthflow/workouts.html',
     '/healthflow/profile.html',
     '/healthflow/style.css',
     '/healthflow/app.js',
-    '/healthflow/water.js',
-    '/healthflow/db.js',
     '/healthflow/manifest.json'
 ];
 
@@ -62,3 +59,4 @@ self.addEventListener('fetch', event => {
             })
     );
 });
+
