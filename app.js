@@ -1,26 +1,27 @@
+что сделать, чтобы у нас исчезло полностью всё, связанное с водой.в нижней панели должны быть только тренировки, упражнения, профиль.а в верхней панели(тренировк и упражнения) не доложнго быть.остальное оставить всё один в один!!! пиши что именно полностью удалить перечислением, а что изменить.
 // Главное приложение HealthFlow
 class HealthFlowApp {
     constructor() {
         this.state = {
-            currentPage: 'water',
+            currentPage: 'workouts', // МЕНЯЕМ с 'water' на 'workouts'
             totalSkins: 0,
             theme: 'cozy'
         };
         this.creatingExercise = false;
         this.creatingWorkout = false;
-        this.editingWorkoutId = null; // Для редактирования существующей тренировки
+        this.editingWorkoutId = null;
         this.draggedExercise = null;
         this.draggedSet = null;
-        this.currentWorkoutData = null; // Добавляем это
+        this.currentWorkoutData = null;
         this.currentMuscleFilter = 'Все';
         this.duringWorkout = {
             isActive: false,
-            changedValues: [] // Массив для отслеживания изменений
+            changedValues: []
         };
     }
 
     async init() {
-        console.log('🚀 Инициализация HealthFlow...');
+        console.log('🚀 Инициализация приложения...');
 
         // Загружаем состояние
         this.loadState();
@@ -28,8 +29,8 @@ class HealthFlowApp {
         // Создаём контейнер для страницы
         this.createPageContainer();
 
-        // Загружаем текущую страницу
-        await this.loadPage('water');
+        // Загружаем текущую страницу (ТЕПЕРЬ workouts)
+        await this.loadPage('workouts');
 
         // Настраиваем навигацию
         this.setupNavigation();
@@ -37,7 +38,7 @@ class HealthFlowApp {
         // Настраиваем Service Worker
         this.setupServiceWorker();
 
-        console.log('✅ HealthFlow запущен');
+        console.log('✅ Приложение запущено');
     }
 
     loadState() {
@@ -90,10 +91,10 @@ class HealthFlowApp {
         const container = document.getElementById('currentPage');
 
         try {
-            if (pageId === 'water') {
-                await this.loadWaterPage(container);
-            } else if (pageId === 'workouts') {
+            if (pageId === 'workouts') {
                 this.showWorkoutsPage(container);
+            } else if (pageId === 'exercises') {
+                this.showExercisesPage(container); // НОВАЯ СТРАНИЦА ДЛЯ УПРАЖНЕНИЙ
             } else if (pageId === 'profile') {
                 this.showProfilePage(container);
             }
@@ -103,32 +104,7 @@ class HealthFlowApp {
         }
     }
 
-    async loadWaterPage(container) {
-        // Загружаем HTML модуля воды
-        const response = await fetch('water.html');
-        const html = await response.text();
 
-        // Вставляем HTML
-        container.innerHTML = html;
-
-        // Загружаем и инициализируем JS модуля воды
-        await this.loadWaterModule();
-    }
-
-    async loadWaterModule() {
-        try {
-            // Загружаем модуль воды
-            const module = await import('./water.js');
-
-            // Инициализируем модуль
-            if (module && module.init) {
-                await module.init(this);
-                console.log('✅ Модуль воды загружен');
-            }
-        } catch (error) {
-            console.error('❌ Ошибка загрузки модуля воды:', error);
-        }
-    }
 
     // СТРАНИЦА ТРЕНИРОВОК С РАЗДЕЛАМИ
     // СТРАНИЦА ТРЕНИРОВОК С РАЗДЕЛАМИ
@@ -172,6 +148,165 @@ class HealthFlowApp {
 
         // Инициализируем тренировки после отрисовки
         setTimeout(() => this.initializeWorkoutsPage(), 100);
+    }
+
+
+
+
+    // НОВАЯ СТРАНИЦА ДЛЯ УПРАЖНЕНИЙ (отдельно от тренировок)
+    showExercisesPage(container) {
+        console.log('Показываем страницу упражнений...');
+
+        container.innerHTML = `
+        <header class="page-header">
+            <h1 class="page-title">Упражнения</h1>
+            <div class="page-controls">
+                <div class="skin-counter">
+                    ✨ <span>${this.state.totalSkins}</span>
+                </div>
+                <button class="theme-toggle" onclick="window.healthFlow.toggleTheme()">
+                    <div class="theme-icon">${this.state.theme === 'cozy' ? '🌙' : '☀️'}</div>
+                </button>
+            </div>
+        </header>
+        
+        <div class="content-container">
+            <div style="padding: 16px;">
+                <!-- Заголовок и кнопка -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div style="font-size: 20px; font-weight: 700; color: var(--text-primary);">
+                        Мои упражнения
+                    </div>
+                    <button id="createExerciseBtn" style="
+                        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+                        border: none;
+                        border-radius: 10px;
+                        padding: 10px 20px;
+                        color: white;
+                        font-weight: 700;
+                        font-size: 14px;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        transition: all 0.2s ease;
+                    ">
+                        <span style="font-size: 18px;">+</span>
+                        Новое упражнение
+                    </button>
+                </div>
+                
+                <!-- Поиск упражнений -->
+                <div style="margin-bottom: 20px;">
+                    <input type="text" 
+                           id="exercisesSearch" 
+                           placeholder="🔍 Поиск по названию..." 
+                           style="
+                                width: 100%;
+                                padding: 14px;
+                                border: 2px solid var(--border-light);
+                                border-radius: 10px;
+                                font-size: 15px;
+                                font-family: inherit;
+                                background: var(--surface);
+                                color: var(--text-primary);
+                                outline: none;
+                                margin-bottom: 12px;
+                           ">
+                    
+                    <!-- Фильтры по группам мышц -->
+                    <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px;">
+                        <button class="exercises-muscle-filter" data-group="Все" style="
+                            padding: 8px 14px;
+                            border: 2px solid var(--primary);
+                            border-radius: 20px;
+                            background: rgba(6, 180, 143, 0.1);
+                            color: var(--primary);
+                            font-size: 13px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            white-space: nowrap;
+                        ">
+                            Все
+                        </button>
+                        ${['Грудь', 'Спина', 'Ноги', 'Плечи', 'Бицепс', 'Трицепс', 'Пресс', 'Ягодицы', 'Кардио', 'Все тело', 'Икры', 'Предплечья'].map(group => `
+                            <button class="exercises-muscle-filter" data-group="${group}" style="
+                                padding: 8px 14px;
+                                border: 2px solid var(--border-light);
+                                border-radius: 20px;
+                                background: var(--surface);
+                                color: var(--text-primary);
+                                font-size: 13px;
+                                font-weight: 600;
+                                cursor: pointer;
+                                white-space: nowrap;
+                            ">
+                                ${group}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <!-- Список упражнений -->
+                <div id="exercisesListContainer" style="
+                    background: var(--surface);
+                    border-radius: 12px;
+                    border: 2px solid var(--border-light);
+                    min-height: 200px;
+                    padding: 20px;
+                ">
+                    <div style="text-align: center; padding: 40px 20px;">
+                        <div style="font-size: 32px; opacity: 0.3; margin-bottom: 10px;">🏋️</div>
+                        <div style="color: var(--text-secondary); font-size: 16px;">Упражнений пока нет</div>
+                        <div style="color: var(--text-light); font-size: 14px; margin-top: 5px;">Создайте первое упражнение!</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+        // Инициализируем после отрисовки
+        setTimeout(() => this.initializeExercisesPage(), 100);
+    }
+
+    // Инициализация страницы упражнений
+    initializeExercisesPage() {
+        console.log('Инициализируем страницу упражнений...');
+
+        // Кнопка создания упражнения
+        const createBtn = document.getElementById('createExerciseBtn');
+        if (createBtn) {
+            createBtn.addEventListener('click', () => {
+                this.showCreateExerciseForm();
+            });
+        }
+
+        // Инициализируем поиск и фильтры
+        this.initializeExercisesSearch();
+
+        // Загружаем упражнения
+        this.loadExercisesForPage();
+    }
+
+    // Загрузка упражнений для отдельной страницы
+    loadExercisesForPage() {
+        const container = document.getElementById('exercisesListContainer');
+        if (!container) return;
+
+        const exercises = JSON.parse(localStorage.getItem('healthflow_exercises') || '[]');
+
+        if (exercises.length === 0) {
+            container.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px;">
+                <div style="font-size: 32px; opacity: 0.3; margin-bottom: 10px;">🏋️</div>
+                <div style="color: var(--text-secondary); font-size: 16px;">Упражнений пока нет</div>
+                <div style="color: var(--text-light); font-size: 14px; margin-top: 5px;">Создайте первое упражнение!</div>
+            </div>
+        `;
+            return;
+        }
+
+        this.filterExercisesList();
     }
 
     // Инициализация страницы тренировок
@@ -2244,9 +2379,9 @@ class HealthFlowApp {
 
 
 
-        initializeWorkoutFormStage2() {
+    initializeWorkoutFormStage2() {
         console.log('Инициализация стадии 2...');
-        
+
         // Кнопка назад
         const backBtn = document.getElementById('backToStage2Btn');
         if (backBtn) {
@@ -4072,7 +4207,7 @@ class HealthFlowApp {
 
 
 
-    
+
 
 
     // === ФУНКЦИОНАЛ ЛЕНТЫ ВЫПОЛНЕНИЯ ТРЕНИРОВКИ ===
@@ -4508,9 +4643,9 @@ class HealthFlowApp {
                                      data-set-index="${setIndex}"
                                      style="
                                         background: ${isCurrentSet ? 'rgba(6, 180, 143, 0.1)' :
-                                                        isSetCompleted ? 'rgba(6, 180, 143, 0.05)' : 'var(--surface)'};
+                        isSetCompleted ? 'rgba(6, 180, 143, 0.05)' : 'var(--surface)'};
                                         border: 2px solid ${isCurrentSet ? workout.color :
-                                                        isSetCompleted ? 'var(--success)' : 'var(--border-light)'};
+                        isSetCompleted ? 'var(--success)' : 'var(--border-light)'};
                                         border-radius: 12px;
                                         padding: 16px;
                                         display: flex;
@@ -4528,7 +4663,7 @@ class HealthFlowApp {
                                             height: 32px;
                                             border-radius: 50%;
                                             background: ${isCurrentSet ? workout.color :
-                                                        isSetCompleted ? 'var(--success)' : 'var(--border-light)'};
+                        isSetCompleted ? 'var(--success)' : 'var(--border-light)'};
                                             color: ${isCurrentSet || isSetCompleted ? 'white' : 'var(--text-secondary)'};
                                             display: flex;
                                             align-items: center;
@@ -4545,7 +4680,7 @@ class HealthFlowApp {
                                             </div>
                                             <div style="font-size: 11px; color: var(--text-secondary);">
                                                 ${isSetCompleted ? '✓ Выполнен' :
-                                                        isCurrentSet ? 'Текущий подход' : 'Ожидание'}
+                        isCurrentSet ? 'Текущий подход' : 'Ожидание'}
                                             </div>
                                         </div>
                                     </div>
