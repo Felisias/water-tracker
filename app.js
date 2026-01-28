@@ -2,7 +2,7 @@
 class HealthFlowApp {
     constructor() {
         this.state = {
-            currentPage: 'water',
+            currentPage: 'workouts',  // Было 'water'
             totalSkins: 0,
             theme: 'cozy'
         };
@@ -28,8 +28,8 @@ class HealthFlowApp {
         // Создаём контейнер для страницы
         this.createPageContainer();
 
-        // Загружаем текущую страницу
-        await this.loadPage('water');
+        // Загружаем текущую страницу - ТЕПЕРЬ ТРЕНИРОВКИ
+        await this.loadPage('workouts');  // Было 'water'
 
         // Настраиваем навигацию
         this.setupNavigation();
@@ -90,12 +90,14 @@ class HealthFlowApp {
         const container = document.getElementById('currentPage');
 
         try {
-            if (pageId === 'water') {
-                await this.loadWaterPage(container);
-            } else if (pageId === 'workouts') {
+            if (pageId === 'workouts') {
                 this.showWorkoutsPage(container);
+            } else if (pageId === 'exercises') {
+                this.showExercisesSectionDirectly(container); // НОВЫЙ МЕТОД
             } else if (pageId === 'profile') {
                 this.showProfilePage(container);
+            } else {
+                container.innerHTML = `<div style="padding: 40px; text-align: center; color: var(--text-secondary);">Страница не найдена</div>`;
             }
         } catch (error) {
             console.error(`❌ Ошибка загрузки страницы ${pageId}:`, error);
@@ -103,32 +105,9 @@ class HealthFlowApp {
         }
     }
 
-    async loadWaterPage(container) {
-        // Загружаем HTML модуля воды
-        const response = await fetch('water.html');
-        const html = await response.text();
+    
 
-        // Вставляем HTML
-        container.innerHTML = html;
-
-        // Загружаем и инициализируем JS модуля воды
-        await this.loadWaterModule();
-    }
-
-    async loadWaterModule() {
-        try {
-            // Загружаем модуль воды
-            const module = await import('./water.js');
-
-            // Инициализируем модуль
-            if (module && module.init) {
-                await module.init(this);
-                console.log('✅ Модуль воды загружен');
-            }
-        } catch (error) {
-            console.error('❌ Ошибка загрузки модуля воды:', error);
-        }
-    }
+    
 
     // СТРАНИЦА ТРЕНИРОВОК С РАЗДЕЛАМИ
     // СТРАНИЦА ТРЕНИРОВОК С РАЗДЕЛАМИ
@@ -2244,9 +2223,9 @@ class HealthFlowApp {
 
 
 
-        initializeWorkoutFormStage2() {
+    initializeWorkoutFormStage2() {
         console.log('Инициализация стадии 2...');
-        
+
         // Кнопка назад
         const backBtn = document.getElementById('backToStage2Btn');
         if (backBtn) {
@@ -3520,6 +3499,147 @@ class HealthFlowApp {
         this.showWorkoutFormStage2();
     }
 
+
+
+    // Прямой показ страницы упражнений
+    showExercisesSectionDirectly(container) {
+        console.log('Показываем страницу упражнений напрямую...');
+
+        container.innerHTML = `
+        <header class="page-header">
+            <h1 class="page-title">Упражнения</h1>
+            <div class="page-controls">
+                <div class="skin-counter">
+                    ✨ <span>${this.state.totalSkins}</span>
+                </div>
+                <button class="theme-toggle" onclick="window.healthFlow.toggleTheme()">
+                    <div class="theme-icon">${this.state.theme === 'cozy' ? '🌙' : '☀️'}</div>
+                </button>
+            </div>
+        </header>
+        
+        <div class="content-container">
+            <div style="padding: 20px;">
+                <!-- Заголовок и кнопка -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div style="font-size: 20px; font-weight: 700; color: var(--text-primary);">
+                        Мои упражнения
+                    </div>
+                    <button id="createExerciseBtn" style="
+                        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+                        border: none;
+                        border-radius: 10px;
+                        padding: 10px 20px;
+                        color: white;
+                        font-weight: 700;
+                        font-size: 14px;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        transition: all 0.2s ease;
+                    ">
+                        <span style="font-size: 18px;">+</span>
+                        Новое упражнение
+                    </button>
+                </div>
+                
+                <!-- Поиск упражнений -->
+                <div style="margin-bottom: 20px;">
+                    <input type="text" 
+                           id="exercisesSearch" 
+                           placeholder="🔍 Поиск по названию..." 
+                           style="
+                                width: 100%;
+                                padding: 14px;
+                                border: 2px solid var(--border-light);
+                                border-radius: 10px;
+                                font-size: 15px;
+                                font-family: inherit;
+                                background: var(--surface);
+                                color: var(--text-primary);
+                                outline: none;
+                                margin-bottom: 12px;
+                           ">
+                    
+                    <!-- Фильтры по группам мышц -->
+                    <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px;">
+                        <button class="exercises-muscle-filter" data-group="Все" style="
+                            padding: 8px 14px;
+                            border: 2px solid var(--primary);
+                            border-radius: 20px;
+                            background: rgba(6, 180, 143, 0.1);
+                            color: var(--primary);
+                            font-size: 13px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            white-space: nowrap;
+                        ">
+                            Все
+                        </button>
+                        ${['Грудь', 'Спина', 'Ноги', 'Плечи', 'Бицепс', 'Трицепс', 'Пресс', 'Ягодицы', 'Кардио', 'Все тело'].map(group => `
+                            <button class="exercises-muscle-filter" data-group="${group}" style="
+                                padding: 8px 14px;
+                                border: 2px solid var(--border-light);
+                                border-radius: 20px;
+                                background: var(--surface);
+                                color: var(--text-primary);
+                                font-size: 13px;
+                                font-weight: 600;
+                                cursor: pointer;
+                                white-space: nowrap;
+                            ">
+                                ${group}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <!-- Список упражнений -->
+                <div id="exercisesList" style="
+                    background: var(--surface);
+                    border-radius: 12px;
+                    border: 2px solid var(--border-light);
+                    min-height: 200px;
+                    padding: 20px;
+                ">
+                    <div style="text-align: center; padding: 40px 20px;">
+                        <div style="font-size: 32px; opacity: 0.3; margin-bottom: 10px;">🏋️</div>
+                        <div style="color: var(--text-secondary); font-size: 16px;">Упражнений пока нет</div>
+                        <div style="color: var(--text-light); font-size: 14px; margin-top: 5px;">Создайте первое упражнение!</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+        // Инициализируем после отрисовки
+        setTimeout(() => {
+            this.initializeExercisesSection();
+        }, 100);
+    }
+
+    // Инициализация секции упражнений
+    initializeExercisesSection() {
+        console.log('Инициализируем секцию упражнений...');
+
+        // Кнопка создания
+        const createBtn = document.getElementById('createExerciseBtn');
+        if (createBtn) {
+            createBtn.addEventListener('click', () => {
+                this.showCreateExerciseForm();
+            });
+        }
+
+        // Поиск и фильтры
+        this.initializeExercisesSearch();
+
+        // Загружаем упражнения
+        this.filterExercisesList('', 'Все');
+    }
+
+
+
     showProfilePage(container) {
         container.innerHTML = `
             <header class="page-header">
@@ -4072,7 +4192,7 @@ class HealthFlowApp {
 
 
 
-    
+
 
 
     // === ФУНКЦИОНАЛ ЛЕНТЫ ВЫПОЛНЕНИЯ ТРЕНИРОВКИ ===
@@ -4508,9 +4628,9 @@ class HealthFlowApp {
                                      data-set-index="${setIndex}"
                                      style="
                                         background: ${isCurrentSet ? 'rgba(6, 180, 143, 0.1)' :
-                                                        isSetCompleted ? 'rgba(6, 180, 143, 0.05)' : 'var(--surface)'};
+                        isSetCompleted ? 'rgba(6, 180, 143, 0.05)' : 'var(--surface)'};
                                         border: 2px solid ${isCurrentSet ? workout.color :
-                                                        isSetCompleted ? 'var(--success)' : 'var(--border-light)'};
+                        isSetCompleted ? 'var(--success)' : 'var(--border-light)'};
                                         border-radius: 12px;
                                         padding: 16px;
                                         display: flex;
@@ -4528,7 +4648,7 @@ class HealthFlowApp {
                                             height: 32px;
                                             border-radius: 50%;
                                             background: ${isCurrentSet ? workout.color :
-                                                        isSetCompleted ? 'var(--success)' : 'var(--border-light)'};
+                        isSetCompleted ? 'var(--success)' : 'var(--border-light)'};
                                             color: ${isCurrentSet || isSetCompleted ? 'white' : 'var(--text-secondary)'};
                                             display: flex;
                                             align-items: center;
@@ -4545,7 +4665,7 @@ class HealthFlowApp {
                                             </div>
                                             <div style="font-size: 11px; color: var(--text-secondary);">
                                                 ${isSetCompleted ? '✓ Выполнен' :
-                                                        isCurrentSet ? 'Текущий подход' : 'Ожидание'}
+                        isCurrentSet ? 'Текущий подход' : 'Ожидание'}
                                             </div>
                                         </div>
                                     </div>
@@ -5496,4 +5616,5 @@ style.textContent = `
 `;
 
 document.head.appendChild(style);
+
 
