@@ -1,5 +1,5 @@
 {
-  "name": "HealthFlow 🏋️",
+  "name": "HealthFlow",
   "short_name": "HealthFlow",
   "description": "Трекер тренировок и упражнений со системой скинтов",
   "start_url": "/healthflow/",
@@ -8,14 +8,28 @@
   "theme_color": "#06B48F",
   "orientation": "portrait",
   "categories": ["health", "lifestyle", "fitness"],
+  
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 fill=%22%2306B48F%22>🏋️</text></svg>",
+      "src": "/healthflow/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/healthflow/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏋️</text></svg>",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ],
+  
   "shortcuts": [
     {
       "name": "Создать тренировку",
@@ -24,7 +38,7 @@
       "url": "/healthflow/#workouts",
       "icons": [
         {
-          "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 fill=%22%2306B48F%22>🔥</text></svg>",
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>",
           "sizes": "96x96"
         }
       ]
