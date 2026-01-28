@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="cozy">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🌿 HealthFlow</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 fill=%22%2306B48F%22>🌿</text></svg>">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#F5F1E6">
+</head>
+<body>
+    <!-- Главный контейнер -->
+    <div class="app-container" id="appContainer">
+        <!-- Будет заполняться JavaScript -->
+    </div>
+
+    <!-- Нижняя навигация -->
+    <nav class="bottom-nav" id="bottomNav">
+        <a href="#water" class="nav-item active" data-page="water">
+            <div class="nav-icon">💧</div>
+            <div class="nav-label">Вода</div>
+        </a>
+        <a href="#workouts" class="nav-item" data-page="workouts">
+            <div class="nav-icon">🏋️</div>
+            <div class="nav-label">Тренировки</div>
+        </a>
+        <a href="#profile" class="nav-item" data-page="profile">
+            <div class="nav-icon">👤</div>
+            <div class="nav-label">Профиль</div>
+        </a>
+    </nav>
+
+    <!-- Всплывающее уведомление -->
+    <div class="notification" id="notification"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
